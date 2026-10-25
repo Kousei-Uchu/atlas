@@ -24,11 +24,13 @@ p { margin: 0; }
 .app-header { display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: space-between; align-items: center; }
 .profile-name, .hint { color: var(--text-muted); font-size: 0.95rem; }
 .toolbar { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.theme-switch { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; }
+.theme-switch label { font-weight: 600; }
 .save-status { min-width: 6rem; font-weight: 600; }
 .save-status[data-status='error'], .save-status[data-status='conflict'] { color: var(--danger); }
 
 /* Buttons and fields */
-button, select, input[type='text'], textarea {
+button, select, input[type='text'], input[type='search'], textarea {
   font: inherit;
   color: var(--text);
   background: var(--surface);
@@ -113,6 +115,15 @@ textarea { width: 100%; resize: vertical; }
   border-style: double;
   background-image: repeating-linear-gradient(135deg, color-mix(in srgb, var(--state-fg) 18%, transparent) 0 4px, transparent 4px 10px);
 }
+/* High-contrast theme (M2-04): ignore each state's custom colours and use the theme's own, so
+   no palette choice can make a label unreadable. The text label, icon and border pattern
+   still tell states apart (I-09). !important is needed to beat the inline custom properties
+   React sets from the palette. The stored colours are untouched (I-03). */
+:root[data-theme='high-contrast'] .state-badge {
+  --state-bg: var(--surface) !important;
+  --state-fg: var(--text) !important;
+  border-width: 4px;
+}
 .state-picker { display: inline-flex; align-items: center; gap: var(--space-2); }
 .state-picker-label { color: var(--text-muted); font-size: 0.9rem; }
 
@@ -145,3 +156,20 @@ input[type='file'] { font: inherit; min-height: var(--target); max-width: 100%; 
 .app, .app-main, .category, .panel, .item-row { grid-template-columns: minmax(0, 1fr); }
 .app .app-main { padding: 0; }
 h1, h2, h3, h4, .profile-name { overflow-wrap: anywhere; }
+
+/* Search and category filter (M2-05). Tokens only. */
+.search-bar { display: grid; gap: var(--space-1); margin-block: var(--space-3); }
+.search-fields { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: flex-end; }
+.search-fields .field { display: grid; gap: var(--space-1); flex: 1 1 12rem; min-width: 0; }
+.search-fields input, .search-fields select { font: inherit; min-height: var(--target); max-width: 100%; }
+.search-summary { margin: 0; }
+
+/* Bulk selection (M2-07). Tokens only. */
+.select-toggle { margin: 0 0 var(--space-3); }
+.select-box { display: inline-flex; gap: var(--space-2); align-items: center; min-height: var(--target); }
+.select-box input { width: 1.4rem; height: 1.4rem; }
+.bulk-bar { display: grid; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: var(--space-3); }
+.bulk-count { margin: 0; font-weight: 600; }
+.bulk-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: flex-end; }
+.bulk-row .field { display: grid; gap: var(--space-1); flex: 1 1 12rem; min-width: 0; }
+.bulk-row select { font: inherit; min-height: var(--target); max-width: 100%; }

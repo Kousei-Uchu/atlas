@@ -18,9 +18,11 @@ import { InlineRename } from './InlineRename.jsx';
  *   onSetShareable: (itemId: string, shareable: boolean) => void,
  *   onRename: (itemId: string, label: string) => void,
  *   onDelete: (itemId: string) => void,
+ *   order?: { canMoveEarlier: boolean, canMoveLater: boolean, onMove: (itemId: string, direction: 'earlier'|'later') => void } | null,
+ *   selection?: { selected: boolean, onToggle: (itemId: string, selected: boolean) => void } | null,
  * }} props
  */
-export function ItemRow({ profile, item, onAction, onSetState, onSetText, onSetNote, onSetShareable, onRename, onDelete }) {
+export function ItemRow({ profile, item, onAction, onSetState, onSetText, onSetNote, onSetShareable, onRename, onDelete, order = null, selection = null }) {
   const [noteOpen, setNoteOpen] = useState(false);
   const noteId = useId();
   const textId = useId();
@@ -33,6 +35,17 @@ export function ItemRow({ profile, item, onAction, onSetState, onSetText, onSetN
 
   return (
     <li className="item-row" data-item-id={item.id}>
+      {selection && (
+        <label className="select-box">
+          <input
+            type="checkbox"
+            aria-label={`Select ${item.label}`}
+            checked={selection.selected}
+            onChange={(event) => selection.onToggle(item.id, event.target.checked)}
+          />
+          <span aria-hidden="true">Select</span>
+        </label>
+      )}
       <div className="item-main">
         <span className="item-label">{item.label}</span>
         {item.type === 'state' ? (
@@ -60,6 +73,30 @@ export function ItemRow({ profile, item, onAction, onSetState, onSetText, onSetN
       </div>
 
       <div className="item-actions">
+        {order && (
+          <>
+            <button
+              type="button"
+              className="quiet"
+              data-move={`item:${item.id}:earlier`}
+              disabled={!order.canMoveEarlier}
+              aria-label={`Move item ${item.label} up`}
+              onClick={() => order.onMove(item.id, 'earlier')}
+            >
+              Up
+            </button>
+            <button
+              type="button"
+              className="quiet"
+              data-move={`item:${item.id}:later`}
+              disabled={!order.canMoveLater}
+              aria-label={`Move item ${item.label} down`}
+              onClick={() => order.onMove(item.id, 'later')}
+            >
+              Down
+            </button>
+          </>
+        )}
         <button
           type="button"
           className="quiet"

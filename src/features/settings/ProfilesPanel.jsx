@@ -3,6 +3,25 @@
 import { useId, useState } from 'react';
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { DELETE_ALL_DESCRIPTION } from '../../content/notices.js';
+import { LIMITS } from '../../domain/limits.js';
+import { StorageUsage } from './StorageUsage.jsx';
+
+/** Rename the open profile. Remounted (by key) whenever the stored name changes, so it never shows a stale name. */
+function RenameForm({ title, onRename }) {
+  const fieldId = useId();
+  const [value, setValue] = useState(title);
+  const submit = (event) => {
+    event.preventDefault();
+    if (value.trim() !== '') onRename(value);
+  };
+  return (
+    <form className="panel-block add-form" onSubmit={submit}>
+      <label htmlFor={fieldId}>Name of this profile</label>
+      <input id={fieldId} type="text" value={value} maxLength={LIMITS.titleLength} onChange={(e) => setValue(e.target.value)} />
+      <button type="submit" disabled={value.trim() === '' || value.trim() === title}>Rename</button>
+    </form>
+  );
+}
 
 /**
  * @param {{
@@ -12,10 +31,14 @@ import { DELETE_ALL_DESCRIPTION } from '../../content/notices.js';
  *   onCreate: (title: string) => Promise<boolean>,
  *   onDelete: (id: string) => Promise<unknown>,
  *   onDeleteAll: () => Promise<unknown>,
+ *   profile?: object|null,                       the open profile; with it the panel offers rename, copy and storage use
+ *   onRename?: (title: string) => { ok: boolean },
+ *   onDuplicate?: () => Promise<boolean>,
+ *   estimate?: () => Promise<{ usage: number, quota: number }|null>,
  *   announce: (text: string) => void,
  * }} props
  */
-export function ProfilesPanel({ profiles, currentId, onSwitch, onCreate, onDelete, onDeleteAll, announce }) {
+export function ProfilesPanel({ profiles, currentId, onSwitch, onCreate, onDelete, onDeleteAll, announce, profile = null, onRename, onDuplicate, estimate }) {
   const id = useId();
   const [choice, setChoice] = useState('');
   const [title, setTitle] = useState('');
@@ -60,6 +83,28 @@ export function ProfilesPanel({ profiles, currentId, onSwitch, onCreate, onDelet
         <input id={`${id}-new`} type="text" value={title} maxLength={120} onChange={(e) => setTitle(e.target.value)} />
         <button type="submit" disabled={title.trim() === ''}>Create profile</button>
       </form>
+
+      {profile && onRename && (
+        <RenameForm
+          key={`${profile.id}:${profile.title}`}
+          title={profile.title}
+          onRename={(title) => { if (onRename(title).ok) announce('Profile renamed'); }}
+        />
+      )}
+
+      {profile && onDuplicate && (
+        <div className="panel-block panel-actions">
+          <button
+            type="button"
+            onClick={async () => { if (await onDuplicate()) announce('Copy created and opened'); }}
+          >
+            Make a copy of this profile
+          </button>
+          <p className="hint">The copy is a separate profile with the same answers and notes. Changing one never changes the other.</p>
+        </div>
+      )}
+
+      <StorageUsage profile={profile} estimate={estimate} />
 
       <div className="panel-block panel-actions">
         <button type="button" className="danger-text" onClick={() => setConfirm('profile')} disabled={!currentId}>

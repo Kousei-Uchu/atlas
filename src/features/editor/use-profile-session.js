@@ -12,6 +12,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { canRedo, canUndo, commit, createHistory, redo as redoHistory, syncRevision, undo as undoHistory } from '../../domain/history.js';
 import { createStarterProfile } from '../../domain/defaults.js';
 import { newId } from '../../domain/ids.js';
+import { duplicateProfile } from '../../domain/profile-commands.js';
 import {
   ConflictError, createProfile, deleteAllData, deleteProfile, listProfiles, loadProfile,
   saveProfile, setActiveProfileId, getActiveProfileId,
@@ -283,6 +284,26 @@ export function useProfileSession({ db, now = defaultNow, makeId = newId, deboun
     return true;
   }, [db, enter, flush, makeId, now]);
 
+  /** Store a copy of the open profile as a NEW profile and open it. The original is not changed (I-12). */
+  const duplicateCurrentProfile = useCallback(async () => {
+    const current = historyRef.current?.present;
+    if (!current) return false;
+    await flush();
+    if (dirtyRef.current && !blockedRef.current) {
+      setActionError('Your latest changes could not be saved yet. Try saving again, or download a backup, before copying.');
+      return false;
+    }
+    if (blockedRef.current) {
+      setActionError('Editing is paused because this profile changed in another tab. Reload to continue.');
+      return false;
+    }
+    const copy = duplicateProfile(historyRef.current.present, { id: makeId('profile') }, now());
+    if (!copy.ok) { setActionError(copy.error); return false; }
+    const stored = await importProfileAsNew(db, copy.profile, { makeId: () => makeId('profile') });
+    enter(stored);
+    return true;
+  }, [db, enter, flush, makeId, now]);
+
   /** Save an already-validated imported profile as a NEW profile and open it (I-12). */
   const importProfile = useCallback(async (profile) => {
     await flush();
@@ -318,7 +339,7 @@ export function useProfileSession({ db, now = defaultNow, makeId = newId, deboun
     canUndo: history ? canUndo(history) : false,
     canRedo: history ? canRedo(history) : false,
     run, undo, redo, announce, retrySave, flush,
-    switchProfile, createNewProfile, importProfile, removeProfile, removeEverything, reloadFromStorage,
+    switchProfile, createNewProfile, duplicateCurrentProfile, importProfile, removeProfile, removeEverything, reloadFromStorage,
     dismissActionError: () => setActionError(null),
   };
 }

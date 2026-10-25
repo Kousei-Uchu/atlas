@@ -1,0 +1,20 @@
+name: checks
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      # lint, source scans, unit and component tests, production build, build checks
+      - run: npm run verify
+      - run: npm audit --omit=dev
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
+      - name: Runtime dependencies are exactly react, react-dom, zod, idb
+        run: |
+          node -e "const d=Object.keys(require('./package.json').dependencies).sort().join(',');if(d!=='idb,react,react-dom,zod'){console.error('Unexpected runtime dependencies: '+d);process.exit(1)}"

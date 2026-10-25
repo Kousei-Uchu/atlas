@@ -5,9 +5,13 @@ import { useEffect, useState } from 'react';
 import { openAtlasDb } from '../storage/database.js';
 import { useProfileSession } from '../features/editor/use-profile-session.js';
 import { MatrixView } from '../features/editor/MatrixView.jsx';
+import { PalettePanel } from '../features/palette/PalettePanel.jsx';
 import { Notice } from '../components/Notice.jsx';
 import { BackupPanel } from '../features/import-export/BackupPanel.jsx';
 import { ProfilesPanel } from '../features/settings/ProfilesPanel.jsx';
+import { ThemeSwitch } from '../features/settings/ThemeSwitch.jsx';
+import { useTheme } from '../features/settings/use-theme.js';
+import { renameProfile } from '../domain/profile-commands.js';
 import { downloadTextFile } from '../features/import-export/download.js';
 import { serialiseRawRecord } from '../storage/backup.js';
 import {
@@ -20,9 +24,11 @@ function isTextTarget(target) {
 }
 
 /** The editor for an open database. Exported separately so tests can pass their own db. */
-export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), makeId, saveFile = downloadTextFile }) {
+export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), makeId, saveFile = downloadTextFile, estimate }) {
   const session = useProfileSession({ db, debounceMs, now, makeId });
   const { phase, profile, undo, redo } = session;
+  // Called before any early return, so the saved theme applies even when the chart cannot load.
+  const theme = useTheme(db);
 
   // Standard undo/redo shortcuts, except inside text fields where the browser handles them.
   useEffect(() => {
@@ -36,7 +42,7 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [undo, redo]);
 
-  const managementPanels = (currentId) => (
+  const managementPanels = (currentId, ready = false) => (
     <>
       <ProfilesPanel
         profiles={session.profiles}
@@ -46,6 +52,10 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
         onDelete={session.removeProfile}
         onDeleteAll={session.removeEverything}
         announce={session.announce}
+        profile={ready ? session.profile : null}
+        onRename={ready ? (title) => session.run(renameProfile, { title }) : undefined}
+        onDuplicate={ready ? session.duplicateCurrentProfile : undefined}
+        estimate={estimate}
       />
       <BackupPanel
         profile={session.profile}
@@ -101,6 +111,7 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
           <span className="save-status" data-status={session.saveStatus}>{status}</span>
           {session.saveStatus === 'error' && <button type="button" onClick={session.retrySave}>Try saving again</button>}
         </div>
+        <ThemeSwitch choice={theme.choice} saveFailed={theme.saveFailed} onChange={theme.setChoice} announce={session.announce} />
       </header>
 
       <main className="app-main">
@@ -117,7 +128,8 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
         {session.actionError && <p className="banner" role="alert" data-tone="error">{session.actionError}</p>}
 
         <MatrixView profile={profile} run={session.run} announce={session.announce} />
-        {managementPanels(profile.id)}
+        <PalettePanel profile={profile} run={session.run} announce={session.announce} />
+        {managementPanels(profile.id, true)}
       </main>
 
       <footer className="app-footer">

@@ -20,8 +20,20 @@ One profile is one stored record (one aggregate): settings, states, categories, 
 - **Effective sensitivity is the higher of item and category (D-015).** `selectors.effectiveSensitivity`.
 - **Notes belong to the answer.** `noteShareable` defaults to false, and clearing a note resets it.
 - **`revision` belongs to storage.** The repository increments it on each save. Undo and redo keep the live revision, so a save after undo never conflicts with itself.
-- **Order is deterministic:** `sortOrder`, then `id`.
+- **Order is deterministic:** `sortOrder`, then `id`. Moving an item or category (`domain/order-commands.js`) renumbers its siblings 10, 20, 30... and changes nothing else (D-031).
+- **Bulk changes are built from the single-item commands** (`domain/bulk-commands.js`), so one rule set covers one item or many. Moving items to another category keeps each item's effective sensitivity at least what it was (D-032).
+- **A copy of a profile is a new record** with a new profile id and revision 0; ids inside it are kept, because they only need to be unique within a profile (D-033).
+- **Search and filters are display only.** `domain/search.js` narrows what is shown and never edits or stores anything; the filter lives in component state and is not saved (D-030).
 - **Every ID is checked:** category parents, item categories, answer items and states, override and view references, with no duplicates and no category cycles. `domain/validation.js`.
+
+## The palette (M2)
+
+States are edited through `domain/palette-commands.js`.
+
+- Name, colour, icon, pattern and description never touch answers (I-03).
+- A state is either in the click cycle, with a unique `cycleOrder`, or menu only (`cycleOrder: null`). New states start menu only. Unanswered always stays in the cycle.
+- Removing a state asks what to do with answers and overrides that use it: clear them, or move them to a state that is no more permissive (D-026, decision 0005).
+- State names are unique ignoring case (D-027).
 
 ## Storage
 

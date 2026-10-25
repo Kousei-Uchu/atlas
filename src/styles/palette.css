@@ -1,0 +1,49 @@
+/* Palette editor (M2). Tokens only; the state colours themselves come from the profile. */
+.panel-heading { display: flex; flex-wrap: wrap; gap: var(--space-2); justify-content: space-between; align-items: center; }
+
+.palette-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.palette-row { border-top: 1px solid var(--border-soft); padding-top: var(--space-3); display: grid; gap: var(--space-2); grid-template-columns: minmax(0, 1fr); }
+.palette-row-main { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+.palette-row-actions { display: flex; flex-wrap: wrap; gap: var(--space-1); align-items: center; }
+.palette-position {
+  display: inline-grid; place-items: center; min-width: 1.75rem; height: 1.75rem; border-radius: 50%;
+  border: 2px solid var(--border); font-weight: 600; font-size: 0.9rem;
+}
+.palette-usage { overflow-wrap: anywhere; }
+
+.state-editor { display: grid; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--border-soft); border-radius: var(--radius); background: var(--bg); }
+.state-editor-preview { display: flex; }
+.field { display: grid; gap: var(--space-1); min-width: 0; }
+.field label, .colour-field > label { font-weight: 600; }
+.field-row { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-start; }
+.field-row > .field, .field-row > .colour-field { flex: 1 1 12rem; }
+.field-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.field-error { color: var(--danger); font-weight: 600; }
+
+.colour-field { display: grid; gap: var(--space-1); }
+.colour-inputs { display: flex; gap: var(--space-2); align-items: center; }
+.colour-inputs input[type='text'] { width: 8rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+input[type='color'] {
+  min-width: var(--target); min-height: var(--target); padding: var(--space-1);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer;
+}
+
+/* Contrast advice (M2-03). Always carries words and a ratio, so colour is never the only cue. */
+.contrast-note { font-size: 0.95rem; }
+.contrast-note[data-level='low'], .contrast-note[data-level='poor'] {
+  color: var(--warn);
+  font-weight: 600;
+  border-left: 0.35rem solid var(--warn);
+  padding-left: var(--space-3);
+}
+.contrast-flag {
+  color: var(--warn);
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 1px solid var(--warn);
+  border-radius: var(--radius);
+  padding: 0 var(--space-2);
+}
+
+.add-state-form { display: grid; gap: var(--space-3); max-width: 28rem; }
+.dialog .field { margin-top: var(--space-1); }

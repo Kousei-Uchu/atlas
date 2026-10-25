@@ -16,13 +16,14 @@ import { useEffect, useId, useRef } from 'react';
  *   cancelLabel?: string,
  *   onConfirm: () => void,
  *   onCancel: () => void,
+ *   children?: import('react').ReactNode,  // extra controls, such as a choice, shown under the description
  * }} props
  */
-export function ConfirmDialog({ title, description, confirmLabel, cancelLabel = 'Cancel', onConfirm, onCancel }) {
+export function ConfirmDialog({ title, description, confirmLabel, cancelLabel = 'Cancel', onConfirm, onCancel, children }) {
   const titleId = useId();
   const descriptionId = useId();
+  const dialogRef = useRef(null);
   const cancelRef = useRef(null);
-  const confirmRef = useRef(null);
 
   useEffect(() => {
     const opener = document.activeElement;
@@ -39,9 +40,10 @@ export function ConfirmDialog({ title, description, confirmLabel, cancelLabel = 
       return;
     }
     if (event.key !== 'Tab') return;
-    // Two buttons only: wrap focus between them.
-    const first = cancelRef.current;
-    const last = confirmRef.current;
+    // Wrap focus across every control inside the dialog.
+    const controls = [...dialogRef.current.querySelectorAll('button, select, input, textarea')].filter((el) => !el.disabled);
+    const first = controls[0];
+    const last = controls[controls.length - 1];
     if (event.shiftKey && document.activeElement === first) {
       event.preventDefault();
       last.focus();
@@ -56,6 +58,7 @@ export function ConfirmDialog({ title, description, confirmLabel, cancelLabel = 
       {/* The keydown handler lives on the dialog so Escape and Tab apply while it is open. */}
       {/* eslint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
       <div
+        ref={dialogRef}
         className="dialog"
         role="alertdialog"
         aria-modal="true"
@@ -65,9 +68,10 @@ export function ConfirmDialog({ title, description, confirmLabel, cancelLabel = 
       >
         <h2 id={titleId} className="dialog-title">{title}</h2>
         <p id={descriptionId} className="dialog-description">{description}</p>
+        {children}
         <div className="dialog-actions">
           <button type="button" ref={cancelRef} onClick={onCancel}>{cancelLabel}</button>
-          <button type="button" ref={confirmRef} className="danger" onClick={onConfirm}>{confirmLabel}</button>
+          <button type="button" className="danger" onClick={onConfirm}>{confirmLabel}</button>
         </div>
       </div>
     </div>

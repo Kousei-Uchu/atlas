@@ -70,3 +70,14 @@ export function descendantCategoryIds(profile, categoryId) {
   }
   return found;
 }
+
+/**
+ * How much of a profile depends on a state: answers that store it and overrides
+ * that point at it. Used to tell the person what removing a state would affect.
+ */
+export function stateUsage(profile, stateId) {
+  return {
+    answers: profile.answers.filter((a) => a.stateId === stateId).length,
+    overrides: profile.overrides.filter((o) => o.stateId === stateId).length,
+  };
+}
