@@ -1,0 +1,77 @@
+name: Unzip uploaded zips
+
+# Runs whenever a .zip file is pushed (or manually from the Actions tab)
+on:
+  push:
+    paths:
+      - "**.zip"
+  workflow_dispatch:
+
+# The built-in GITHUB_TOKEN is enough, no personal access token needed
+permissions:
+  contents: write
+
+# Never run two unzip jobs on the same branch at once
+concurrency:
+  group: unzip-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Extract zips in place and remove them
+        env:
+          # If a zip contains exactly one top-level folder, drop that folder so the
+          # contents land directly where the zip was. Set to "false" to keep it.
+          STRIP_SINGLE_ROOT: "true"
+        run: |
+          set -euo pipefail
+
+          # Every tracked .zip file in the repo (null-separated, safe for spaces)
+          mapfile -d '' zips < <(git ls-files -z | grep -zi '\.zip$' || true)
+
+          if [ ${#zips[@]} -eq 0 ]; then
+            echo "No zip files found."
+            exit 0
+          fi
+
+          for zip in "${zips[@]}"; do
+            echo "Extracting: $zip"
+            dir=$(dirname "$zip")
+            tmp=$(mktemp -d)
+
+            # Extract to a temp folder first, skipping macOS junk
+            unzip -q -o "$zip" -x '__MACOSX/*' '*.DS_Store' -d "$tmp"
+
+            # Decide which folder to copy from
+            src="$tmp"
+            if [ "$STRIP_SINGLE_ROOT" = "true" ]; then
+              count=$(find "$tmp" -mindepth 1 -maxdepth 1 | wc -l)
+              only=$(find "$tmp" -mindepth 1 -maxdepth 1 | head -n 1)
+              if [ "$count" -eq 1 ] && [ -d "$only" ]; then
+                src="$only"
+              fi
+            fi
+
+            # Put the contents where the zip used to be, then delete the zip
+            cp -a "$src"/. "$dir"/
+            git rm -q -f "$zip"
+            rm -rf "$tmp"
+          done
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing to commit."
+            exit 0
+          fi
+          git commit -m "Unzip uploaded archives"
+          # Rebase in case someone pushed while this job was running
+          git pull --rebase
+          git push
