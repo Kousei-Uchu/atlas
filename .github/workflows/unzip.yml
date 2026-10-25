@@ -10,6 +10,7 @@ on:
 # The built-in GITHUB_TOKEN is enough, no personal access token needed
 permissions:
   contents: write
+  workflows: write
 
 # Never run two unzip jobs on the same branch at once
 concurrency:
