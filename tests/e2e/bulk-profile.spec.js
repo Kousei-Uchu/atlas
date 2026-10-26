@@ -45,7 +45,7 @@ test('Escape closes the bulk dialog and changes nothing (M2-07)', async ({ page,
 test('rename and copy a profile (M2-08)', async ({ page }) => {
   const field = page.getByRole('textbox', { name: 'Name of this profile' });
   await field.fill('Work me');
-  await page.getByRole('button', { name: 'Rename' }).click();
+  await page.getByRole('button', { name: 'Rename', exact: true }).click();
   await expect(page.locator('.profile-name')).toHaveText('Profile: Work me');
   await saved(page);
 

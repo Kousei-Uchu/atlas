@@ -10,7 +10,7 @@ test('renaming a state keeps the answer, and both survive a reload (I-03)', asyn
   await page.getByRole('combobox', { name: `Choose a state for ${HUG}` }).first().selectOption({ label: 'Yes' });
   await openPalette(page);
   await page.getByRole('button', { name: 'Edit Yes' }).click();
-  await page.getByRole('textbox', { name: 'Name' }).fill('Happy to');
+  await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Happy to');
   await page.getByRole('button', { name: 'Save changes to Yes' }).click();
   await expect(stateButton(page, HUG)).toHaveText('Happy to');
   await saved(page);

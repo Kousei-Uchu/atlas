@@ -13,6 +13,7 @@ import { canRedo, canUndo, commit, createHistory, redo as redoHistory, syncRevis
 import { createStarterProfile } from '../../domain/defaults.js';
 import { newId } from '../../domain/ids.js';
 import { duplicateProfile } from '../../domain/profile-commands.js';
+import { buildProfileFromModules } from '../../domain/profile-from-modules.js';
 import {
   ConflictError, createProfile, deleteAllData, deleteProfile, listProfiles, loadProfile,
   saveProfile, setActiveProfileId, getActiveProfileId,
@@ -284,6 +285,23 @@ export function useProfileSession({ db, now = defaultNow, makeId = newId, deboun
     return true;
   }, [db, enter, flush, makeId, now]);
 
+  /** Start a NEW profile that holds only the chosen modules, and open it (M3-06, I-12). */
+  const createProfileFromModules = useCallback(async ({ title, templates, acknowledgeAdult = false }) => {
+    const built = buildProfileFromModules({ id: makeId('profile'), title, templates, acknowledgeAdult, makeId }, now());
+    if (!built.ok) {
+      setActionError(built.error);
+      return false;
+    }
+    await flush();
+    if (dirtyRef.current && !blockedRef.current) {
+      setActionError('Your latest changes could not be saved yet. Try saving again, or download a backup, first.');
+      return false;
+    }
+    const stored = await createProfile(db, built.profile);
+    enter(stored);
+    return true;
+  }, [db, enter, flush, makeId, now]);
+
   /** Store a copy of the open profile as a NEW profile and open it. The original is not changed (I-12). */
   const duplicateCurrentProfile = useCallback(async () => {
     const current = historyRef.current?.present;
@@ -339,7 +357,7 @@ export function useProfileSession({ db, now = defaultNow, makeId = newId, deboun
     canUndo: history ? canUndo(history) : false,
     canRedo: history ? canRedo(history) : false,
     run, undo, redo, announce, retrySave, flush,
-    switchProfile, createNewProfile, duplicateCurrentProfile, importProfile, removeProfile, removeEverything, reloadFromStorage,
+    switchProfile, createNewProfile, createProfileFromModules, duplicateCurrentProfile, importProfile, removeProfile, removeEverything, reloadFromStorage,
     dismissActionError: () => setActionError(null),
   };
 }

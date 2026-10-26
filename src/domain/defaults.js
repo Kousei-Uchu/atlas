@@ -87,3 +87,18 @@ export function createStarterProfile({ id, now, title = 'My profile' }) {
     metadata: { templateIds: ['starter'] },
   };
 }
+
+/**
+ * A new profile with the default states and settings and nothing else: no categories, items or
+ * answers. Modules are added to it afterwards (M3-06).
+ * @param {{ id: string, now: string, title?: string }} args
+ * @returns {import('./schema.js').Profile}
+ */
+export function createBlankProfile({ id, now, title = 'My profile' }) {
+  return {
+    ...createStarterProfile({ id, now, title }),
+    categories: [],
+    items: [],
+    metadata: { templateIds: [] },
+  };
+}

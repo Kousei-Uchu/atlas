@@ -32,12 +32,13 @@ test('an item moves down with the keyboard, keeps focus, and the order survives 
   await expect(down).toBeFocused();
   await saved(page);
   await page.reload();
+  await expect(page.locator('.item-row .item-label')).toHaveCount(7);
   expect((await labels(page)).slice(0, 2)).toEqual(['A high five', HUG]);
 });
 
 test('a category moves down and the move buttons disappear while filtering (M2-06)', async ({ page }) => {
   await page.getByRole('button', { name: 'Move category Sample: Physical contact down' }).click();
-  await expect(page.getByRole('heading', { level: 2 }).first()).toHaveText('Sample: Communication');
+  await expect(page.locator('.category-header h2').first()).toHaveText('Sample: Communication');
   await page.getByRole('searchbox', { name: 'Search items' }).fill('text');
   await expect(page.getByRole('button', { name: /^Move (item|category)/ })).toHaveCount(0);
 });

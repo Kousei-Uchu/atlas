@@ -6,6 +6,10 @@
 export const CONSENT_NOTICE =
   'A chart shows general preferences. It is not permission, and it does not replace asking. If someone says no or changes their mind, that comes first.';
 
+/** D-009: shown each time an adult-intended module is turned on. No age is asked for or stored. */
+export const ADULT_MODULE_NOTICE =
+  'This module covers relationships, intimacy, attraction or the body, and it is intended for adults. The app does not ask for your age and does not store it. Turn it on only if it is right for you. You can hide it again at any time, and your answers stay saved.';
+
 export const LOCAL_STORAGE_NOTICE =
   'Your charts are stored in this browser on this device. Clearing browser data, using private browsing, or switching device can remove them. Export a backup regularly. Other people who use this browser profile may be able to read them.';
 

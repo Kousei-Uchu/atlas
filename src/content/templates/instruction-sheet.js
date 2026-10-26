@@ -1,0 +1,65 @@
+// Template 20: personal instruction sheet. Mostly text the person writes. Nothing is prefilled.
+export default {
+  templateId: "instruction-sheet",
+  version: 1,
+  title: "Personal instruction sheet",
+  summary: "A short guide to working or spending time with you, in your own words.",
+  defaultVisibility: 'visible',
+  adultIntended: false,
+  isSample: false,
+  statement: 'preferences-not-consent',
+  categories: [
+    {
+      key: "sheet-about",
+      name: "About me",
+      description: "Write whatever you want people to know. Leave anything empty.",
+      sensitivity: "personal",
+      items: [
+        { key: "about-call", type: "text", label: "What I like to be called" },
+        { key: "about-enjoy", type: "text", label: "What I enjoy talking about" },
+        { key: "about-ask", type: "text", label: "What I would like people to ask me about" },
+        { key: "about-ask-first", type: "text", label: "What I would like people to ask before they assume" },
+        { key: "about-knowing", type: "text", label: "Something that helps people get to know me" },
+      ],
+    },
+    {
+      key: "sheet-best",
+      name: "Working or spending time with me",
+      sensitivity: "personal",
+      items: [
+        { key: "best-works", type: "text", label: "What works well with me" },
+        { key: "best-feedback", type: "text", label: "How I like to receive feedback" },
+        { key: "best-decisions", type: "text", label: "How I like to make decisions" },
+        { key: "best-busy", type: "text", label: "What I need when I am busy" },
+        { key: "best-contact", type: "text", label: "How and when to contact me" },
+        { key: "best-plans", type: "text", label: "How I like plans to be made" },
+        { key: "best-group", type: "text", label: "How I do best in a group" },
+        { key: "best-alone", type: "text", label: "How I like to spend time alone" },
+      ],
+    },
+    {
+      key: "sheet-tired",
+      name: "When things get hard",
+      sensitivity: "personal",
+      items: [
+        { key: "hard-signs", type: "text", label: "Signs that I am tired or stressed" },
+        { key: "hard-need", type: "text", label: "What I may need then" },
+        { key: "hard-avoid", type: "text", label: "What not to do then" },
+        { key: "hard-reply", type: "text", label: "How I might reply when I am stressed" },
+        { key: "hard-after", type: "text", label: "What helps me afterwards" },
+      ],
+    },
+    {
+      key: "sheet-ask",
+      name: "How people should use this sheet",
+      sensitivity: "personal",
+      items: [
+        { key: "ask-read", label: "People reading this before we work or spend time together" },
+        { key: "ask-share", label: "People sharing this sheet with others" },
+        { key: "ask-check", label: "People checking with me if something has changed" },
+        { key: "ask-questions", label: "People asking me questions about it" },
+        { key: "ask-update", label: "Updating this sheet over time" },
+      ],
+    },
+  ],
+};

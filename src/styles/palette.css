@@ -47,3 +47,16 @@ input[type='color'] {
 
 .add-state-form { display: grid; gap: var(--space-3); max-width: 28rem; }
 .dialog .field { margin-top: var(--space-1); }
+
+/* Click behaviour (M2-09). Tokens only. Each choice is a native radio inside a 44px target. */
+.choice-group { border: 1px solid var(--border-soft); border-radius: var(--radius); padding: var(--space-3); margin: 0; display: grid; gap: var(--space-2); min-width: 0; }
+.choice-group legend { font-weight: 600; padding: 0 var(--space-1); }
+.choice { display: flex; gap: var(--space-3); align-items: flex-start; min-height: var(--target); }
+.choice input { margin-top: var(--space-2); flex: none; }
+.choice-text { display: grid; gap: var(--space-1); min-height: var(--target); align-content: center; }
+.choice-text label { font-weight: 600; }
+
+/* Module library (M3-04). Tokens only. */
+.module-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.module { border: 1px solid var(--border-soft); border-radius: var(--radius); padding: var(--space-3); display: grid; gap: var(--space-2); }
+.module h3, .module p { margin: 0; }

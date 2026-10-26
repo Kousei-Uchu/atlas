@@ -11,6 +11,7 @@
     "test": "vitest run",
     "check:source": "node scripts/check-source.mjs",
     "check:dist": "node scripts/check-dist.mjs",
+    "templates:wording": "node scripts/templates-wording.mjs",
     "test:e2e": "playwright test",
     "verify": "npm run lint && npm run check:source && npm test && npm run build && npm run check:dist"
   },

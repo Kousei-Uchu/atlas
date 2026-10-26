@@ -1,0 +1,77 @@
+// Template 17: anatomy and compatibility (D-008, I-10). Descriptive and about bodies only.
+// It is kept apart from gender: nothing here refers to gender, and the gender template does not
+// refer to bodies. Neither is used to work out the other.
+export default {
+  templateId: 'anatomy-compatibility',
+  version: 1,
+  title: 'Anatomy and compatibility',
+  summary: 'Words and information about your body, and how you like bodies to be talked about. This is separate from gender.',
+  defaultVisibility: 'hidden',
+  adultIntended: true,
+  isSample: false,
+  statement: 'preferences-not-consent',
+  categories: [
+    {
+      key: 'words',
+      name: 'Words for my body',
+      description: 'You write the words. Nothing is filled in for you.',
+      sensitivity: 'restricted',
+      items: [
+        { key: 'words-mine', type: 'text', label: 'Words I use for parts of my body', description: 'Write them here.' },
+        { key: 'words-others', type: 'text', label: 'Words I would like other people to use', description: 'Write them here.' },
+        { key: 'words-avoid', type: 'text', label: 'Words I would like people not to use', description: 'Write them here.' },
+        { key: 'words-medical', type: 'text', label: 'Words I prefer in a medical setting', description: 'Write them here.' },
+        { key: 'words-clinical', label: 'Plain, clinical words for my body' },
+        { key: 'words-casual', label: 'Casual or playful words for my body' },
+        { key: 'words-none', label: 'Not using any words for my body at all' },
+      ],
+    },
+    {
+      key: 'talking',
+      name: 'Talking about bodies',
+      sensitivity: 'restricted',
+      items: [
+        { key: 'talking-asked-first', label: 'Being asked about my body before anything physical' },
+        { key: 'talking-partner', label: 'A partner asking about my body' },
+        { key: 'talking-doctor', label: 'A doctor asking about my body' },
+        { key: 'talking-friend', label: 'A close friend asking about my body' },
+        { key: 'talking-stranger', label: 'Questions about my body from someone I do not know well' },
+        { key: 'talking-assume', label: 'Someone assuming things about my body' },
+        { key: 'talking-describe', label: 'Someone describing my body to other people' },
+        { key: 'talking-humour', label: 'Jokes about bodies' },
+        { key: 'talking-write', label: 'Being asked to describe my body in writing' },
+        { key: 'talking-theirs', label: 'Someone telling me about their body' },
+        { key: 'talking-time', label: 'Being given time before I answer questions about my body' },
+      ],
+    },
+    {
+      key: 'information',
+      name: 'Information others may need',
+      sensitivity: 'restricted',
+      items: [
+        { key: 'information-partner', type: 'text', label: 'What a partner needs to know about my body', description: 'Write it here.' },
+        { key: 'information-doctor', type: 'text', label: 'What a doctor needs to know about my body', description: 'Write it here.' },
+        { key: 'information-touch', type: 'text', label: 'Anything that changes how I like to be touched, such as pain or sensitivity', description: 'Write it here.' },
+        { key: 'information-energy', type: 'text', label: 'Anything that affects my energy or comfort during closeness', description: 'Write it here.' },
+        { key: 'information-share', label: 'Sharing this information before it comes up' },
+        { key: 'information-share-asked', label: 'Sharing this information only when I am asked' },
+      ],
+    },
+    {
+      key: 'compatibility',
+      name: 'Compatibility',
+      description: 'Things two people may want to talk through so that what they expect matches.',
+      sensitivity: 'restricted',
+      items: [
+        { key: 'compat-needs', label: 'Talking through each other\u2019s body-related needs early on' },
+        { key: 'compat-limits', label: 'Talking about what each of our bodies can and cannot do comfortably' },
+        { key: 'compat-health', label: 'Talking about health that affects closeness' },
+        { key: 'compat-fertility', label: 'Talking about fertility and family plans' },
+        { key: 'compat-contraception', label: 'Sharing the work of contraception' },
+        { key: 'compat-changes', label: 'Talking again if either body changes over time' },
+        { key: 'compat-mismatch', label: 'Being open if what we each want does not match' },
+        { key: 'compat-no-pressure', label: 'Not feeling pressure to match what my partner expects' },
+      ],
+    },
+  ],
+};

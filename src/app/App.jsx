@@ -9,6 +9,9 @@ import { PalettePanel } from '../features/palette/PalettePanel.jsx';
 import { Notice } from '../components/Notice.jsx';
 import { BackupPanel } from '../features/import-export/BackupPanel.jsx';
 import { ProfilesPanel } from '../features/settings/ProfilesPanel.jsx';
+import { ModulesPanel } from '../features/modules/ModulesPanel.jsx';
+import { NewProfileFromModules } from '../features/modules/NewProfileFromModules.jsx';
+import { ClickSettings } from '../features/settings/ClickSettings.jsx';
 import { ThemeSwitch } from '../features/settings/ThemeSwitch.jsx';
 import { useTheme } from '../features/settings/use-theme.js';
 import { renameProfile } from '../domain/profile-commands.js';
@@ -57,6 +60,7 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
         onDuplicate={ready ? session.duplicateCurrentProfile : undefined}
         estimate={estimate}
       />
+      <NewProfileFromModules onCreate={session.createProfileFromModules} announce={session.announce} />
       <BackupPanel
         profile={session.profile}
         existingIds={session.profiles.map((p) => p.id)}
@@ -129,6 +133,8 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
 
         <MatrixView profile={profile} run={session.run} announce={session.announce} />
         <PalettePanel profile={profile} run={session.run} announce={session.announce} />
+        <ClickSettings profile={profile} run={session.run} announce={session.announce} />
+        <ModulesPanel profile={profile} run={session.run} announce={session.announce} />
         {managementPanels(profile.id, true)}
       </main>
 

@@ -22,3 +22,11 @@ Nothing you enter is sent anywhere. See `docs/ATLAS_SPEC_AND_PROGRESS.md` for th
 - `docs/DATA_MODEL.md`: how the data is shaped and stored
 - `docs/SECURITY_AND_PRIVACY.md`: guarantees and what proves them
 - `docs/decisions/`: short records of non-obvious choices
+
+## Templates and modules (M3)
+
+The app bundles 22 templates in `src/content/templates/`, one plain data file each. A template becomes a *module* when it is added to a profile. Adding a module only adds categories and items, never answers. Modules about relationships, intimacy, attraction or the body are intended for adults, start hidden, and show a short note before they are turned on. No age is asked or stored.
+
+- Read the wording without reading code: `npm run templates:wording` writes `docs/TEMPLATE_WORDING.md`.
+- Writing or editing a template: see `src/content/templates/README.md`. A template key never changes after release; change the label instead.
+- Decisions: `docs/decisions/0010` to `0012`.

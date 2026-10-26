@@ -35,6 +35,37 @@ States are edited through `domain/palette-commands.js`.
 - Removing a state asks what to do with answers and overrides that use it: clear them, or move them to a state that is no more permissive (D-026, decision 0005).
 - State names are unique ignoring case (D-027).
 
+## Click behaviour (M2)
+
+Two profile settings decide what a click does: `settings.interaction.primaryDirection` (`negative` or `positive`) and `settings.cycle.endBehaviour` (`clamp` or `loop`). They are changed through `domain/settings-commands.js` and read by `stepItemState`.
+
+- They belong to the profile, so a backup and a copy carry them. The theme does not: it is a device preference (D-029).
+- They change what the next click does and never touch a saved answer (I-03).
+- A secondary click always moves the opposite way to a primary click.
+- Choosing the value that is already set returns the same profile, so it adds no undo step.
+
+## Templates (M3)
+
+A template is a bundled data file in `src/content/templates/`, checked by `domain/templates.js`. It holds categories and items only, never answers.
+
+- `templateId` and `version` identify it. Categories and items made from it carry `origin: { templateId, templateVersion, key }`.
+- `key` is unique across the whole template and never changes after release. Reset and update match on it, so renaming a label does not break the link.
+- An item with no sensitivity of its own takes its category's.
+- A template with restricted content must be `adultIntended` and hidden by default.
+- Templates are not part of a profile or a backup. Only the `origin` records are.
+
+See `src/content/templates/README.md` for how to write one.
+
+### Modules in a profile
+
+A module is a template that has been added to a profile. There is no separate record for it. A module is present when any category has `origin.templateId` equal to the template's id, and `metadata.templateIds` lists the ids that have been added.
+
+- Showing and hiding a module sets `visibility` on all of its categories. Hidden categories and their items stay in the profile with their answers, and the chart leaves them out.
+- A module cannot be added twice.
+- **Update** adds what a newer template has and the profile lacks, and records the new `templateVersion` on every entry. **Reset** also puts the template's wording and order back. Both find entries by `origin.key`, keep every answer and note, keep what the person added and what the template no longer has, never change an item's type, and never lower a sensitivity level (D-038).
+- A new profile can be started from chosen modules. It is built from a blank profile (default states and settings, no categories) by adding each module in turn (D-039).
+- Turning on an adult-intended module needs the adult note to be acknowledged each time. That sets `settings.restrictedModulesAcknowledged` to `true`. No age is asked for or stored (D-009).
+
 ## Storage
 
 IndexedDB database `atlas-db` version 1.
