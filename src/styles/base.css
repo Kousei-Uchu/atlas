@@ -79,7 +79,7 @@ textarea { width: 100%; resize: vertical; }
 .item-label { font-weight: 600; overflow-wrap: anywhere; }
 .item-note { display: grid; gap: var(--space-2); padding: var(--space-2); background: var(--bg); border-radius: var(--radius); }
 .checkbox-row { display: flex; gap: var(--space-2); align-items: flex-start; }
-.checkbox-row input { width: 1.4rem; height: 1.4rem; margin-top: 0.2rem; }
+.checkbox-row input { width: 1.5rem; height: 1.5rem; margin-top: 0.2rem; }
 
 /* Wide screens: label left, controls right, like a matrix row. */
 @media (min-width: 42rem) {
@@ -167,7 +167,7 @@ h1, h2, h3, h4, .profile-name { overflow-wrap: anywhere; }
 /* Bulk selection (M2-07). Tokens only. */
 .select-toggle { margin: 0 0 var(--space-3); }
 .select-box { display: inline-flex; gap: var(--space-2); align-items: center; min-height: var(--target); }
-.select-box input { width: 1.4rem; height: 1.4rem; }
+.select-box input { width: 1.5rem; height: 1.5rem; }
 .bulk-bar { display: grid; gap: var(--space-3); padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: var(--space-3); }
 .bulk-count { margin: 0; font-weight: 600; }
 .bulk-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: flex-end; }

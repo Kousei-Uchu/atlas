@@ -106,6 +106,7 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
   const status = SAVE_STATUS_TEXT[session.saveStatus];
   return (
     <div className="app">
+      <a className="skip-link" href="#main">Skip to the chart</a>
       <header className="app-header">
         <div>
           <h1>Personal Boundaries &amp; Identity Atlas</h1>
@@ -120,7 +121,7 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
         <ThemeSwitch choice={theme.choice} saveFailed={theme.saveFailed} onChange={theme.setChoice} announce={session.announce} />
       </header>
 
-      <main className="app-main">
+      <main className="app-main" id="main" tabIndex={-1}>
         <Notice title="Preferences are not consent">{CONSENT_NOTICE}</Notice>
 
         {session.saveError && (

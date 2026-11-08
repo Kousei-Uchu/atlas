@@ -48,3 +48,17 @@
   .state-badge[data-pattern='stripes'] { border-style: double; }
   :focus-visible { outline-color: Highlight; }
 }
+
+/* M6-02: skip link, target size and reflow. */
+.skip-link {
+  position: absolute; left: var(--space-2); top: -4rem; z-index: 100;
+  padding: var(--space-2) var(--space-3); background: var(--bg); color: var(--text);
+  border: 2px solid var(--text); border-radius: var(--radius); font-weight: 600;
+}
+.skip-link:focus { top: var(--space-2); }
+.app-main:focus { outline: none; }
+/* Checkboxes and radios are at least 24 px square (WCAG 2.5.8) and are not stretched by a grid parent. */
+input[type='checkbox'], input[type='radio'] { width: 1.5rem; height: 1.5rem; min-width: 1.5rem; justify-self: start; align-self: start; }
+/* Long labels, hints and file pickers wrap instead of pushing the page sideways at 320 px. */
+.panel-block, .panel-block > * { min-width: 0; }
+input[type='file'] { width: 100%; }
