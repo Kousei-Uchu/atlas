@@ -39,10 +39,22 @@ States are edited through `domain/palette-commands.js`.
 
 Two profile settings decide what a click does: `settings.interaction.primaryDirection` (`negative` or `positive`) and `settings.cycle.endBehaviour` (`clamp` or `loop`). They are changed through `domain/settings-commands.js` and read by `stepItemState`.
 
+`settings.maturePhrasing` (boolean, optional, missing means off) chooses the direct wording of module entries that have one (D-043). It is changed by `setMaturePhrasing`, which rewrites the label, name or description of an entry only while it still equals the template's wording in the other phrasing. A template entry carries the direct wording as `mature`, under the same key, so `origin.key` and update and reset are unaffected. Backups carry the setting with the profile.
+
 - They belong to the profile, so a backup and a copy carry them. The theme does not: it is a device preference (D-029).
 - They change what the next click does and never touch a saved answer (I-03).
 - A secondary click always moves the opposite way to a primary click.
 - Choosing the value that is already set returns the same profile, so it adds no undo step.
+
+## Audiences and overrides (M4)
+
+Audiences and overrides are edited through `domain/audience-commands.js` and read through `domain/audience-resolution.js` (decision 0013).
+
+- What an audience sees: an enabled override, else the item's own answer, else Unanswered. Every result carries its source and the person's reason.
+- An override never changes the item's own answer (I-04). The default view ignores every override.
+- Two enabled overrides that disagree are a conflict. The value falls to Unanswered and nothing is chosen for the person (D-013, D-042).
+- Deleting an item or category removes its overrides. Removing a state moves or clears them, never to a more permissive state (D-026).
+- Deleting an audience removes its overrides and is refused while a view uses it (D-043).
 
 ## Templates (M3)
 
@@ -88,3 +100,7 @@ Import is size-checked, parsed in isolation, validated, previewed, and saved as 
 ## Changing the model
 
 Any change to stored shape needs a new `schemaVersion`, an explicit tested migration from N to N+1, and a failure path that leaves the original record intact (spec 9). Until then, version 1 data from a newer app is rejected, never trimmed.
+
+## Views (M4-04)
+
+A view is an allowlist: `includedItemIds`, plus `includeSensitive`, `restrictedOptInItemIds` and `includeNotes`. It stores no values. What a view shows is computed from the profile by `evaluateView` each time (D-044), so changing an answer, an override, a level or a category's visibility changes the result with no edit to the view. Removing an item from a view also removes its restricted opt-in. View commands are in `domain/view-commands.js`.

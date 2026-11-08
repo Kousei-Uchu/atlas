@@ -29,6 +29,9 @@ const PERMISSIVENESS = {
   positive: 3,
 };
 
+/** How open a state is, for safety checks only (never ordering). Higher means more permissive. */
+export const permissivenessOf = (state) => PERMISSIVENESS[state.semantic] ?? 3;
+
 const isAllowedReplacement = (removed, candidate) => PERMISSIVENESS[candidate.semantic] <= PERMISSIVENESS[removed.semantic];
 
 /**

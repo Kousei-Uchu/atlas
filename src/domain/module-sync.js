@@ -13,7 +13,7 @@ import { LIMITS } from './limits.js';
 import { SENSITIVITY_LEVELS } from './schema.js';
 import { newId } from './ids.js';
 import { idFactory } from './module-commands.js';
-import { originFor } from './templates.js';
+import { originFor, wordingOf } from './templates.js';
 
 const ok = (profile, extra = {}) => ({ ok: true, profile, ...extra });
 const fail = (error) => ({ ok: false, error });
@@ -53,6 +53,7 @@ export function planModuleSync(profile, template) {
   if (!usable(template)) return empty;
   const mine = own(profile, template.templateId);
   if (mine.categories.length === 0 && mine.items.length === 0) return empty;
+  const mature = profile.settings.maturePhrasing === true;
 
   const versions = [...mine.categories, ...mine.items].map((e) => e.origin.templateVersion);
   const installedVersion = Math.min(...versions);
@@ -64,19 +65,21 @@ export function planModuleSync(profile, template) {
   for (const category of template.categories) {
     templateKeys.add(category.key);
     const existing = mine.categoryByKey.get(category.key);
+    const categoryWords = wordingOf(category, mature);
     if (!existing) {
-      addCategories.push({ key: category.key, name: category.name, items: category.items.length });
+      addCategories.push({ key: category.key, name: categoryWords.text, items: category.items.length });
       for (const item of category.items) templateKeys.add(item.key);
       continue;
     }
-    if (existing.name !== category.name || existing.description !== (category.description ?? '')) {
+    if (existing.name !== categoryWords.text || existing.description !== categoryWords.description) {
       differing.push({ kind: 'category', key: category.key, name: existing.name });
     }
     for (const item of category.items) {
       templateKeys.add(item.key);
       const found = mine.itemByKey.get(item.key);
-      if (!found) { addItems.push({ key: item.key, label: item.label, category: existing.name }); continue; }
-      if (found.label !== item.label || found.description !== (item.description ?? '') || !sameTags(found.tags, item.tags ?? [])) {
+      const words = wordingOf(item, mature);
+      if (!found) { addItems.push({ key: item.key, label: words.text, category: existing.name }); continue; }
+      if (found.label !== words.text || found.description !== words.description || !sameTags(found.tags, item.tags ?? [])) {
         differing.push({ kind: 'item', key: item.key, name: found.label });
       }
     }
@@ -100,6 +103,7 @@ function build(profile, template, plan, mine, makeId) {
   if (profile.items.length + newItemCount > LIMITS.items) return fail(`A profile can have up to ${LIMITS.items} items.`);
 
   const freshId = idFactory(profile, makeId);
+  const mature = profile.settings.maturePhrasing === true;
   const idError = fail('Could not make a new identifier. Try again.');
   // New categories follow the module: shown while it is on, hidden while it is hidden. An
   // adult-intended module whose note has not been read never gains a visible category (D-009).
@@ -117,15 +121,17 @@ function build(profile, template, plan, mine, makeId) {
     const categoryId = freshId('cat');
     if (categoryId === null) return idError;
     idFor.set(source.key, categoryId);
+    const categoryWords = wordingOf(source, mature);
     categories.push({
-      id: categoryId, name: source.name, description: source.description ?? '', parentId: null,
+      id: categoryId, name: categoryWords.text, description: categoryWords.description, parentId: null,
       sortOrder: topOrder + (index + 1) * 10, visibility, sensitivity: source.sensitivity, origin: originFor(template, source.key),
     });
     for (const [position, item] of source.items.entries()) {
       const itemId = freshId('item');
       if (itemId === null) return idError;
+      const words = wordingOf(item, mature);
       items.push({
-        id: itemId, categoryId, type: item.type ?? 'state', label: item.label, description: item.description ?? '',
+        id: itemId, categoryId, type: item.type ?? 'state', label: words.text, description: words.description,
         sortOrder: (position + 1) * 10, sensitivity: item.sensitivity ?? source.sensitivity, tags: [...(item.tags ?? [])], origin: originFor(template, item.key),
       });
     }
@@ -141,8 +147,9 @@ function build(profile, template, plan, mine, makeId) {
     if (itemId === null) return idError;
     const sortOrder = (lastOrder.get(category.id) ?? 0) + 10;
     lastOrder.set(category.id, sortOrder);
+    const words = wordingOf(item, mature);
     items.push({
-      id: itemId, categoryId: category.id, type: item.type ?? 'state', label: item.label, description: item.description ?? '',
+      id: itemId, categoryId: category.id, type: item.type ?? 'state', label: words.text, description: words.description,
       sortOrder, sensitivity: item.sensitivity ?? source.sensitivity,
       tags: [...(item.tags ?? [])], origin: originFor(template, item.key),
     });
@@ -205,13 +212,15 @@ export function resetModule(profile, { template, makeId = newId }, now) {
   const specItem = new Map(template.categories.flatMap((c) => c.items.map((i) => [i.key, i])));
   const categoryPosition = new Map(template.categories.map((c, index) => [c.key, index]));
   const itemPosition = new Map(template.categories.flatMap((c) => c.items.map((i, index) => [i.key, index])));
+  const mature = profile.settings.maturePhrasing === true;
   let restored = 0;
 
   const restoreCategory = (c) => {
     if (c.origin?.templateId !== template.templateId) return c;
     const spec = specCategory.get(c.origin.key);
     if (!spec) return stamp(c, template);
-    const next = { ...stamp(c, template), name: spec.name, description: spec.description ?? '', sensitivity: higher(c.sensitivity, spec.sensitivity) };
+    const words = wordingOf(spec, mature);
+    const next = { ...stamp(c, template), name: words.text, description: words.description, sensitivity: higher(c.sensitivity, spec.sensitivity) };
     if (next.name !== c.name || next.description !== c.description) restored += 1;
     return next;
   };
@@ -219,8 +228,9 @@ export function resetModule(profile, { template, makeId = newId }, now) {
     if (i.origin?.templateId !== template.templateId) return i;
     const spec = specItem.get(i.origin.key);
     if (!spec) return stamp(i, template);
+    const words = wordingOf(spec, mature);
     const next = {
-      ...stamp(i, template), label: spec.label, description: spec.description ?? '', tags: [...(spec.tags ?? [])],
+      ...stamp(i, template), label: words.text, description: words.description, tags: [...(spec.tags ?? [])],
       sensitivity: higher(i.sensitivity, spec.sensitivity ?? 'normal'),
     };
     if (next.label !== i.label || next.description !== i.description || !sameTags(next.tags, i.tags)) restored += 1;

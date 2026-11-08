@@ -16,6 +16,8 @@ const out = [
   '',
   `Every template carries this statement: ${CONSENT_NOTICE}`,
   '',
+  'Some entries in adult-intended modules also have a mature phrasing, shown as an indented line under the plain wording. It is used only when the person turns on mature phrasing for their profile.',
+  '',
 ];
 
 for (const t of TEMPLATES) {
@@ -25,9 +27,11 @@ for (const t of TEMPLATES) {
   for (const c of t.categories) {
     out.push(`### ${c.name} (${c.sensitivity})`, '');
     if (c.description) out.push(c.description, '');
+    if (c.mature) out.push(`Mature phrasing: **${c.mature.name}**${c.mature.description && c.mature.description !== c.description ? `. ${c.mature.description}` : ''}`, '');
     for (const i of c.items) {
       const extra = [i.type === 'text' ? 'text' : '', i.sensitivity !== c.sensitivity ? i.sensitivity : ''].filter(Boolean).join(', ');
       out.push(`- ${i.label}${extra ? ` [${extra}]` : ''}${i.description ? `. ${i.description}` : ''}`);
+      if (i.mature) out.push(`  - Mature phrasing: ${i.mature.label}${i.mature.description && i.mature.description !== i.description ? `. ${i.mature.description}` : ''}`);
     }
     out.push('');
   }

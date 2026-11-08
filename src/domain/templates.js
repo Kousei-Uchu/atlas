@@ -20,6 +20,18 @@ export const TEMPLATE_STATEMENT = 'preferences-not-consent';
 const KEY_PATTERN = /^[a-z0-9][a-z0-9_-]{0,79}$/;
 const key = z.string().regex(KEY_PATTERN, 'A key uses lower-case letters, digits, hyphens and underscores');
 
+// Mature phrasing (D-043): an optional second wording for the same entry, with the same key. The
+// plain wording is what everyone gets by default. The mature wording is used only when the person
+// turns on "mature phrasing" for their profile, and it may use direct words for bodies and sex.
+const matureItemSchema = z.strictObject({
+  label: z.string().min(1).max(LIMITS.labelLength),
+  description: z.string().max(LIMITS.descriptionLength).optional(),
+});
+const matureCategorySchema = z.strictObject({
+  name: z.string().min(1).max(LIMITS.categoryNameLength),
+  description: z.string().max(LIMITS.descriptionLength).optional(),
+});
+
 const templateItemSchema = z.strictObject({
   key,
   type: z.enum(['state', 'text']).optional(),
@@ -27,6 +39,7 @@ const templateItemSchema = z.strictObject({
   description: z.string().max(LIMITS.descriptionLength).optional(),
   sensitivity: sensitivitySchema.optional(),
   tags: z.array(z.string().min(1).max(LIMITS.tagLength)).max(LIMITS.tagsPerItem).optional(),
+  mature: matureItemSchema.optional(),
 });
 
 const templateCategorySchema = z.strictObject({
@@ -34,6 +47,7 @@ const templateCategorySchema = z.strictObject({
   name: z.string().min(1).max(LIMITS.categoryNameLength),
   description: z.string().max(LIMITS.descriptionLength).optional(),
   sensitivity: sensitivitySchema,
+  mature: matureCategorySchema.optional(),
   items: z.array(templateItemSchema).min(1).max(TEMPLATE_LIMITS.itemsPerCategory),
 });
 
@@ -70,6 +84,31 @@ function checkRules(t) {
     total += category.items.length;
   }
   if (total > TEMPLATE_LIMITS.items) problem(problems, `The template has ${total} items. The limit is ${TEMPLATE_LIMITS.items}.`);
+
+  // A mature wording must differ from the plain one, and must stay unique inside the template, so
+  // switching never merges two items into one and never leaves a variant that changes nothing.
+  const labelsPlain = new Set();
+  const labelsMature = new Set();
+  for (const category of t.categories) {
+    if (category.mature && category.mature.name === category.name && (category.mature.description ?? '') === (category.description ?? '')) {
+      problem(problems, `The mature wording of the category "${category.key}" is the same as its plain wording.`);
+    }
+    for (const item of category.items) {
+      if (item.mature && item.mature.label === item.label && (item.mature.description ?? '') === (item.description ?? '')) {
+        problem(problems, `The mature wording of "${item.key}" is the same as its plain wording.`);
+      }
+      const plain = item.label.toLowerCase();
+      const mature = (item.mature?.label ?? item.label).toLowerCase();
+      if (labelsPlain.has(plain)) problem(problems, `The label "${item.label}" is used more than once.`);
+      if (labelsMature.has(mature)) problem(problems, `The mature label "${item.mature?.label ?? item.label}" is used more than once.`);
+      labelsPlain.add(plain);
+      labelsMature.add(mature);
+    }
+  }
+
+  // Direct wording belongs only in modules that are hidden by default and show the adult note (D-043).
+  const hasMature = t.categories.some((c) => c.mature || c.items.some((i) => i.mature));
+  if (hasMature && t.adultIntended !== true) problem(problems, 'Mature wording is only allowed in an adult-intended template (D-043).');
 
   const restricted = t.categories.some((c) => c.sensitivity === 'restricted' || c.items.some((i) => i.sensitivity === 'restricted'));
   // Restricted content is hidden until turned on. Adult-intended is a separate flag for modules whose
@@ -109,6 +148,7 @@ export function normaliseTemplate(t) {
     categories: t.categories.map((c) => ({
       ...c,
       description: c.description ?? '',
+      ...(c.mature ? { mature: { name: c.mature.name, description: c.mature.description ?? c.description ?? '' } } : {}),
       items: c.items.map((i) => ({
         key: i.key,
         type: i.type ?? 'state',
@@ -116,6 +156,9 @@ export function normaliseTemplate(t) {
         description: i.description ?? '',
         sensitivity: i.sensitivity ?? c.sensitivity,
         tags: [...(i.tags ?? [])],
+        // Present only when the template has a mature wording. A variant that gives no description
+        // keeps the plain one, so a text prompt such as "Write it here." never has to be repeated.
+        ...(i.mature ? { mature: { label: i.mature.label, description: i.mature.description ?? i.description ?? '' } } : {}),
       })),
     })),
   };
@@ -167,6 +210,18 @@ export function summariseTemplate(template) {
     }
   }
   return { categories: template.categories.length, items, bySensitivity };
+}
+
+/**
+ * The wording an item or category has in a given phrasing. `mature` is the profile's
+ * `settings.maturePhrasing`. An entry with no mature wording reads the same either way.
+ * @param {{ label?: string, name?: string, description?: string, mature?: object }} entry
+ * @param {boolean} mature
+ * @returns {{ text: string, description: string }} `text` is the item label or the category name.
+ */
+export function wordingOf(entry, mature) {
+  const source = mature === true && entry.mature ? entry.mature : entry;
+  return { text: entry.label !== undefined ? source.label ?? entry.label : source.name ?? entry.name, description: source.description ?? entry.description ?? '' };
 }
 
 /**

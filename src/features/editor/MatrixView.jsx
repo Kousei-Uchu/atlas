@@ -19,6 +19,7 @@ import { descendantCategoryIds, effectiveStateId, getAnswer, getCategoryTree, ge
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { InlineRename } from './InlineRename.jsx';
 import { ItemRow } from './ItemRow.jsx';
+import { ItemAudiences } from '../audiences/ItemAudiences.jsx';
 import { BulkBar } from './BulkBar.jsx';
 import { SearchBar } from './SearchBar.jsx';
 
@@ -191,6 +192,7 @@ export function MatrixView({ profile, run, announce }) {
                 onSetShareable={onSetShareable}
                 onRename={onRenameItem}
                 onDelete={onDeleteItem}
+                renderAudiences={profile.audiences.length > 0 ? (target) => <ItemAudiences profile={profile} item={target} run={run} announce={announce} /> : null}
                 selection={selecting ? { selected: selectedSet.has(item.id), onToggle: toggleSelected } : null}
                 order={canReorder ? {
                   canMoveEarlier: itemIndex > 0,

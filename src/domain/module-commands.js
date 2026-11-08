@@ -5,7 +5,7 @@
 // hiding a module keeps every answer in it. Resetting and updating a module is M3-06.
 import { LIMITS } from './limits.js';
 import { isValidId, newId } from './ids.js';
-import { originFor } from './templates.js';
+import { originFor, wordingOf } from './templates.js';
 
 const ok = (profile, extra = {}) => ({ ok: true, profile, ...extra });
 const fail = (error) => ({ ok: false, error });
@@ -78,6 +78,7 @@ export function addModule(profile, { template, visibility, acknowledgeAdult = fa
   if (profile.items.length + newItems > LIMITS.items) return fail(`A profile can have up to ${LIMITS.items} items.`);
 
   const freshId = idFactory(profile, makeId);
+  const mature = profile.settings.maturePhrasing === true;
 
   const top = profile.categories.filter((c) => c.parentId === null).reduce((m, c) => Math.max(m, c.sortOrder), 0);
   const categories = [];
@@ -85,16 +86,18 @@ export function addModule(profile, { template, visibility, acknowledgeAdult = fa
   for (const [index, category] of template.categories.entries()) {
     const categoryId = freshId('cat');
     if (categoryId === null) return fail('Could not make a new identifier. Try again.');
+    const categoryWords = wordingOf(category, mature);
     categories.push({
-      id: categoryId, name: category.name, description: category.description ?? '', parentId: null,
+      id: categoryId, name: categoryWords.text, description: categoryWords.description, parentId: null,
       sortOrder: top + (index + 1) * 10, visibility: show, sensitivity: category.sensitivity,
       origin: originFor(template, category.key),
     });
     for (const [position, item] of category.items.entries()) {
       const itemId = freshId('item');
       if (itemId === null) return fail('Could not make a new identifier. Try again.');
+      const words = wordingOf(item, mature);
       items.push({
-        id: itemId, categoryId, type: item.type ?? 'state', label: item.label, description: item.description ?? '',
+        id: itemId, categoryId, type: item.type ?? 'state', label: words.text, description: words.description,
         sortOrder: (position + 1) * 10, sensitivity: item.sensitivity ?? category.sensitivity,
         tags: [...(item.tags ?? [])], origin: originFor(template, item.key),
       });

@@ -110,6 +110,9 @@ export const settingsSchema = z.strictObject({
   cycle: z.strictObject({ endBehaviour: z.enum(['clamp', 'loop']) }),
   interaction: z.strictObject({ primaryDirection: z.enum(['negative', 'positive']) }),
   restrictedModulesAcknowledged: z.boolean(),
+  // D-043: use the direct (mature) wording of module items. Optional so profiles and backups made
+  // before it existed still validate; a missing value means off.
+  maturePhrasing: z.boolean().optional(),
 });
 
 export const profileSchema = z.strictObject({

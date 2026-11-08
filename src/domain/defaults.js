@@ -25,6 +25,7 @@ export function createDefaultSettings() {
     cycle: { endBehaviour: 'clamp' },
     interaction: { primaryDirection: 'negative' },
     restrictedModulesAcknowledged: false,
+    maturePhrasing: false,
   };
 }
 

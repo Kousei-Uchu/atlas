@@ -12,6 +12,9 @@ test('the browser itself blocks a request to another origin', async ({ page }) =
     try { await fetch('https://example.com/', { mode: 'no-cors' }); return 'sent'; } catch { return 'blocked'; }
   });
   expect(outcome).toBe('blocked');
+  // The policy reported the block, which is the point of this test, so it is not a violation by the app.
+  expect(page.blocked.length).toBeGreaterThan(0);
+  page.blocked.length = 0;
 });
 
 test('uses the app without making any request to another origin (I-06)', async ({ page }) => {

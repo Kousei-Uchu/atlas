@@ -173,3 +173,28 @@ h1, h2, h3, h4, .profile-name { overflow-wrap: anywhere; }
 .bulk-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: flex-end; }
 .bulk-row .field { display: grid; gap: var(--space-1); flex: 1 1 12rem; min-width: 0; }
 .bulk-row select { font: inherit; min-height: var(--target); max-width: 100%; }
+
+/* Audiences (M4-03). Tokens only. */
+.item-audiences { display: grid; gap: var(--space-2); }
+.audience-lines { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
+.audience-line { display: grid; gap: var(--space-2); border-top: 1px solid var(--border-soft); padding-top: var(--space-2); }
+.audience-line-head { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; justify-content: space-between; }
+.audience-name { font-weight: 600; }
+.audience-line select, .audience-line input[type='text'] { font: inherit; min-height: var(--target); max-width: 100%; }
+
+/* Views and exports (M4-05, M4-06). Tokens only. */
+.view-builder { border-top: 1px solid var(--border-soft); padding-top: var(--space-3); }
+.picker { display: grid; gap: var(--space-3); }
+.picker-group { border: 1px solid var(--border-soft); border-radius: var(--radius); padding: var(--space-3); display: grid; gap: var(--space-2); min-width: 0; }
+.picker-list, .review-list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-2); }
+.export-preview { width: 100%; max-width: 100%; box-sizing: border-box; padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); color: var(--text); font: inherit; font-size: 0.9rem; }
+
+/* Shared chart preview (M5-02) */
+.shared-chart { max-width: 48rem; }
+.shared-items { list-style: none; padding: 0; margin: 0 0 1rem; }
+.shared-items li { padding: 0.5rem 0; border-bottom: 1px solid var(--border, currentColor); }
+.shared-label { font-weight: 600; margin-right: 0.5rem; }
+.shared-text, .shared-note { white-space: pre-wrap; overflow-wrap: anywhere; }
+.shared-note { margin: 0.25rem 0 0; }
+
+.qr-code { display: block; max-width: 100%; height: auto; border: 1px solid var(--border, currentColor); }

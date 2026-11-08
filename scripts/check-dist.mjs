@@ -22,6 +22,13 @@ for (const name of readdirSync(assetDir)) {
   if (/@import\s+url\(\s*["']?https?:|url\(\s*["']?https?:/i.test(css)) problems.push(`${name} loads something from another origin.`);
 }
 
+// Test-only libraries must not be in the shipped code.
+for (const name of readdirSync(assetDir)) {
+  if (!name.endsWith('.js')) continue;
+  const js = readFileSync(join(assetDir, name), 'utf8');
+  for (const marker of ['jsQR', 'axe-core', 'fake-indexeddb']) if (js.includes(marker)) problems.push(`${name} contains ${marker}, a test-only library.`);
+}
+
 if (problems.length > 0) {
   process.stderr.write(`Build check failed:\n- ${problems.join('\n- ')}\n`);
   process.exit(1);

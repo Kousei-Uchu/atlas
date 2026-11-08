@@ -10,6 +10,10 @@ export const CONSENT_NOTICE =
 export const ADULT_MODULE_NOTICE =
   'This module covers relationships, intimacy, attraction or the body, and it is intended for adults. The app does not ask for your age and does not store it. Turn it on only if it is right for you. You can hide it again at any time, and your answers stay saved.';
 
+/** D-043: shown each time mature phrasing is turned on. */
+export const MATURE_PHRASING_NOTICE =
+  'Mature phrasing uses direct words for bodies and for sexual activity in the adult modules, in place of the general wording. It changes wording only. It adds no answers, and wording you have changed yourself is kept. It is for adults. You can switch back at any time.';
+
 export const LOCAL_STORAGE_NOTICE =
   'Your charts are stored in this browser on this device. Clearing browser data, using private browsing, or switching device can remove them. Export a backup regularly. Other people who use this browser profile may be able to read them.';
 
@@ -40,3 +44,7 @@ export const CONFLICT_HELP =
 
 export const DELETE_ALL_DESCRIPTION =
   'This permanently removes every profile, answer and note stored by this app in this browser, and the saved choice of active profile. It does not touch backup files you have downloaded. A fresh sample profile is created afterwards. This cannot be undone.';
+
+/** I-07, spec 11.6: shown wherever a share link is made. Fixed wording. Never say a link is private or secure. */
+export const SHARE_PRIVACY_NOTICE =
+  'Anyone who has this link can read everything in it. It is not encrypted. Browser history, messaging apps, screenshots and synced devices may keep copies. Only include what you are comfortable sharing.';

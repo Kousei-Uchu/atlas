@@ -1,11 +1,17 @@
 // Template 17: anatomy and compatibility (D-008, I-10). Descriptive and about bodies only.
 // It is kept apart from gender: nothing here refers to gender, and the gender template does not
 // refer to bodies. Neither is used to work out the other.
+//
+// Version 2 (D-043) adds biological sex and private parts. The plain wording uses general words
+// ("private parts", "front passage", "back passage"). Each entry that has a `mature` wording uses
+// direct anatomical words instead when the person turns on mature phrasing. Same keys either way.
+// Where a body part is named, an item is about touch, sight or care. It never assumes the person
+// has that part, and Not applicable is always a fair answer.
 export default {
   templateId: 'anatomy-compatibility',
-  version: 1,
+  version: 2,
   title: 'Anatomy and compatibility',
-  summary: 'Words and information about your body, and how you like bodies to be talked about. This is separate from gender.',
+  summary: 'Words and information about your body, including biological sex and private parts, and how you like bodies to be talked about. This is separate from gender.',
   defaultVisibility: 'hidden',
   adultIntended: true,
   isSample: false,
@@ -55,6 +61,88 @@ export default {
         { key: 'information-energy', type: 'text', label: 'Anything that affects my energy or comfort during closeness', description: 'Write it here.' },
         { key: 'information-share', label: 'Sharing this information before it comes up' },
         { key: 'information-share-asked', label: 'Sharing this information only when I am asked' },
+      ],
+    },
+    {
+      key: 'sex-characteristics',
+      name: 'Biological sex and body characteristics',
+      description: 'You write this in your own words. Nothing is filled in or guessed for you.',
+      sensitivity: 'restricted',
+      items: [
+        { key: 'sexchar-own', type: 'text', label: 'My biological sex, in my own words', description: 'Write it here, or leave it blank.' },
+        { key: 'sexchar-records', type: 'text', label: 'What my medical or official records say, if that matters', description: 'Write it here.' },
+        { key: 'sexchar-features', type: 'text', label: 'Body features a partner or doctor should know about', description: 'Write them here.' },
+        { key: 'sexchar-treatments', type: 'text', label: 'Hormones, treatments or surgery that affect my body', description: 'Write them here, or leave it blank.' },
+        { key: 'sexchar-ask', label: 'Being asked about my biological sex' },
+        { key: 'sexchar-doctor', label: 'A doctor asking about my biological sex' },
+        { key: 'sexchar-forms', label: 'Being asked for my biological sex on a form' },
+        { key: 'sexchar-assume', label: 'Someone assuming my biological sex' },
+        { key: 'sexchar-private', label: 'Keeping my biological sex private from people I do not know well' },
+        { key: 'sexchar-partner-tells', label: 'A partner telling me about their biological sex before anything physical' },
+        { key: 'sexchar-reproductive', label: 'Talking about reproductive health' },
+        { key: 'sexchar-period', label: 'Talking about periods or other regular body changes' },
+      ],
+    },
+    {
+      key: 'private-parts-seen',
+      name: 'Private parts: seeing and being seen',
+      description: 'Each item is separate. Mark an item Not applicable if it does not apply to your body.',
+      sensitivity: 'restricted',
+      mature: { name: 'Genitals: seeing and being seen', description: 'Each item is separate. Mark an item Not applicable if that part is not on your body or does not apply.' },
+      items: [
+        { key: 'priv-which', type: 'text', label: 'Which parts of my body this section applies to', description: 'Write it here.', mature: { label: 'Which of my genitals and nearby parts this section applies to' } },
+        { key: 'priv-seen-partner', label: 'My private parts being seen by a partner', mature: { label: 'My genitals being seen by a partner' } },
+        { key: 'priv-seen-theirs', label: 'Seeing a partner\u2019s private parts', mature: { label: 'Seeing a partner\u2019s genitals' } },
+        { key: 'priv-seen-light', label: 'My private parts being seen in bright light', mature: { label: 'My genitals being seen in bright light' } },
+        { key: 'priv-seen-undressed', label: 'Being undressed by someone else' },
+        { key: 'priv-seen-undress-first', label: 'Being the first to undress' },
+        { key: 'priv-seen-photo', label: 'My private parts being photographed or filmed', mature: { label: 'My genitals being photographed or filmed' } },
+        { key: 'priv-seen-pictures', label: 'Being asked to send pictures of my private parts', mature: { label: 'Being asked to send pictures of my genitals' } },
+        { key: 'priv-seen-receive', label: 'Being sent pictures of a partner\u2019s private parts', mature: { label: 'Being sent pictures of a partner\u2019s genitals' } },
+        { key: 'priv-seen-comment', label: 'Comments about how my private parts look', mature: { label: 'Comments about how my genitals look' } },
+      ],
+    },
+    {
+      key: 'private-parts-touch',
+      name: 'Private parts: touch',
+      description: 'Touch to my body, one place at a time. A yes to one is never a yes to another.',
+      sensitivity: 'restricted',
+      mature: { name: 'Genitals and nearby parts: touch', description: 'Touch to my body, one place at a time. A yes to one is never a yes to another.' },
+      items: [
+        { key: 'priv-touch-over', label: 'Touch over clothing to my private parts', mature: { label: 'Touch over clothing to my genitals' } },
+        { key: 'priv-touch-direct', label: 'Direct touch to the outside of my private parts', mature: { label: 'Direct touch to the outside of my genitals, such as the penis, testicles, vulva or clitoris' } },
+        { key: 'priv-touch-front', label: 'Touch that goes inside my front passage', mature: { label: 'Touch that goes inside my vagina' } },
+        { key: 'priv-touch-back', label: 'Touch that goes inside my back passage', mature: { label: 'Touch that goes inside my anus' } },
+        { key: 'priv-touch-between', label: 'Touch to the area between my buttocks', mature: { label: 'Touch to the outside of my anus' } },
+        { key: 'priv-touch-thighs', label: 'Touch to my inner thighs and the area around my private parts', mature: { label: 'Touch to my inner thighs and groin' } },
+        { key: 'priv-touch-chest', label: 'Touch to my breasts or chest' },
+        { key: 'priv-touch-nipples', label: 'Touch to my nipples' },
+        { key: 'priv-touch-buttocks', label: 'Touch to my buttocks' },
+        { key: 'priv-touch-slow', label: 'Touch to my private parts that is slow and gentle' },
+        { key: 'priv-touch-firm', label: 'Touch to my private parts that is firm or fast' },
+        { key: 'priv-touch-pain', label: 'Touch to my private parts that is rough enough to hurt', mature: { label: 'Touch to my genitals that is rough enough to hurt' } },
+        { key: 'priv-touch-self', label: 'Touching my own private parts in front of a partner', mature: { label: 'Touching my own genitals in front of a partner' } },
+        { key: 'priv-touch-guided', label: 'Being shown by a partner how they like to be touched' },
+        { key: 'priv-touch-told', label: 'Telling a partner how I like to be touched' },
+      ],
+    },
+    {
+      key: 'private-parts-care',
+      name: 'Private parts: health and examinations',
+      sensitivity: 'restricted',
+      mature: { name: 'Genitals: health and examinations' },
+      items: [
+        { key: 'priv-care-exam', label: 'A doctor or nurse examining my private parts', mature: { label: 'A doctor or nurse examining my genitals' } },
+        { key: 'priv-care-screening', label: 'Intimate health checks, such as screening or swabs', mature: { label: 'Cervical screening, prostate examinations or swabs for infections' } },
+        { key: 'priv-care-chaperone', label: 'Having a second person present during an examination' },
+        { key: 'priv-care-choose', label: 'Choosing who carries out an examination of my private parts', mature: { label: 'Choosing who carries out an examination of my genitals' } },
+        { key: 'priv-care-explain', label: 'Having each step of an examination explained first' },
+        { key: 'priv-care-stop', label: 'An examination stopping straight away when I say stop' },
+        { key: 'priv-care-photos', label: 'Medical photographs of my private parts', mature: { label: 'Medical photographs of my genitals' } },
+        { key: 'priv-care-partner-told', label: 'A partner knowing the results of my intimate health checks', mature: { label: 'A partner knowing the results of my tests for infections' } },
+        { key: 'priv-care-hygiene', label: 'Being asked about washing and hygiene before anything physical' },
+        { key: 'priv-care-info', type: 'text', label: 'What a partner needs to know about my private parts', description: 'Write it here.', mature: { label: 'What a partner needs to know about my genitals' } },
+        { key: 'priv-care-pain', type: 'text', label: 'Anything about my private parts that changes how I like to be touched', description: 'Write it here, such as pain, scars or sensitivity.', mature: { label: 'Anything about my genitals that changes how I like to be touched' } },
       ],
     },
     {

@@ -8,7 +8,9 @@ export const STORE_PROFILES = 'profiles';
 export const STORE_SETTINGS = 'settings';
 
 /** @param {{ name?: string }} [options] */
-export function openAtlasDb({ name = DB_NAME } = {}) {
+// Async on purpose: with no IndexedDB at all, openDB throws at once, and callers must see a rejection to show
+// the storage message rather than crash (M6-01).
+export async function openAtlasDb({ name = DB_NAME } = {}) {
   return openDB(name, DB_VERSION, {
     upgrade(db) {
       if (!db.objectStoreNames.contains(STORE_PROFILES)) db.createObjectStore(STORE_PROFILES, { keyPath: 'id' });

@@ -5,9 +5,10 @@
 import { useId, useState } from 'react';
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { TEMPLATES } from '../../content/templates/index.js';
-import { ADULT_MODULE_NOTICE } from '../../content/notices.js';
+import { ADULT_MODULE_NOTICE, MATURE_PHRASING_NOTICE } from '../../content/notices.js';
 import { addModule, moduleStatus, setModuleVisibility } from '../../domain/module-commands.js';
 import { planModuleSync, resetModule, updateModule } from '../../domain/module-sync.js';
+import { setMaturePhrasing } from '../../domain/settings-commands.js';
 import { summariseTemplate } from '../../domain/templates.js';
 
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -68,6 +69,9 @@ function Status({ status, summary }) {
   return <span>Hidden. Your answers are kept.</span>;
 }
 
+/** Whether any module in the catalogue has a mature wording, so the choice is only offered when it does something. */
+const hasMatureWording = (templates) => templates.some((t) => t.categories.some((c) => c.mature || c.items.some((i) => i.mature)));
+
 /**
  * @param {{
  *   profile: object,
@@ -81,6 +85,7 @@ export function ModulesPanel({ profile, run, announce, templates = TEMPLATES }) 
   const [open, setOpen] = useState(false);
   const [pending, setPending] = useState(null); // { template, action } while the adult note is showing
   const [maintain, setMaintain] = useState(null); // { template, action: 'update'|'reset' } while that dialog is showing
+  const [askingMature, setAskingMature] = useState(false); // while the mature phrasing note is showing
   const library = templates.filter((t) => !t.isSample);
 
   const apply = (template, action, acknowledgeAdult = false) => {
@@ -116,6 +121,18 @@ export function ModulesPanel({ profile, run, announce, templates = TEMPLATES }) 
       if (result.ok) announce(`Reset ${template.title}. ${plural(result.restored, 'entry', 'entries')} restored and ${plural(result.added.items, 'item', 'items')} added. Your answers are kept.`);
     }
   };
+  const mature = profile.settings.maturePhrasing === true;
+  const choosePhrasing = (wantMature) => {
+    if (wantMature === mature) return;
+    if (wantMature) { setAskingMature(true); return; }
+    const result = run(setMaturePhrasing, { enabled: false, templates });
+    if (result.ok) announce(`General wording is back. ${plural(result.changed, 'entry', 'entries')} reworded. Your answers and your own wording are kept.`);
+  };
+  const confirmMature = () => {
+    setAskingMature(false);
+    const result = run(setMaturePhrasing, { enabled: true, acknowledge: true, templates });
+    if (result.ok) announce(`Mature phrasing is on. ${plural(result.changed, 'entry', 'entries')} reworded. Your answers and your own wording are kept.`);
+  };
   const maintainPlan = maintain ? planModuleSync(profile, maintain.template) : null;
 
   return (
@@ -132,6 +149,25 @@ export function ModulesPanel({ profile, run, announce, templates = TEMPLATES }) 
           <p className="hint">
             A module adds a set of categories and items to this profile. Adding one never fills in an answer, and hiding one keeps its answers.
           </p>
+          {hasMatureWording(library) && (
+            <fieldset className="choice-group">
+              <legend>Wording in adult modules</legend>
+              <div className="choice">
+                <input id={`${panelId}-phrasing-general`} type="radio" name={`${panelId}-phrasing`} checked={!mature} aria-describedby={`${panelId}-phrasing-general-hint`} onChange={() => choosePhrasing(false)} />
+                <div className="choice-text">
+                  <label htmlFor={`${panelId}-phrasing-general`}>General wording</label>
+                  <span className="hint" id={`${panelId}-phrasing-general-hint`}>Bodies and intimacy are described in general terms, such as private parts and full intimacy.</span>
+                </div>
+              </div>
+              <div className="choice">
+                <input id={`${panelId}-phrasing-mature`} type="radio" name={`${panelId}-phrasing`} checked={mature} aria-describedby={`${panelId}-phrasing-mature-hint`} onChange={() => choosePhrasing(true)} />
+                <div className="choice-text">
+                  <label htmlFor={`${panelId}-phrasing-mature`}>Mature phrasing</label>
+                  <span className="hint" id={`${panelId}-phrasing-mature-hint`}>Direct words for bodies and sexual activity. It changes the wording of module items only. Wording you changed yourself and every answer are kept.</span>
+                </div>
+              </div>
+            </fieldset>
+          )}
           <ul className="module-list">
             {library.map((template) => {
               const status = moduleStatus(profile, template.templateId);
@@ -184,6 +220,16 @@ export function ModulesPanel({ profile, run, announce, templates = TEMPLATES }) 
 
       {maintain?.action === 'update' && <UpdateDialog template={maintain.template} plan={maintainPlan} onConfirm={maintainNow} onCancel={() => setMaintain(null)} />}
       {maintain?.action === 'reset' && <ResetDialog template={maintain.template} plan={maintainPlan} onConfirm={maintainNow} onCancel={() => setMaintain(null)} />}
+
+      {askingMature && (
+        <ConfirmDialog
+          title="Turn on mature phrasing?"
+          description={MATURE_PHRASING_NOTICE}
+          confirmLabel="Turn on mature phrasing"
+          onConfirm={confirmMature}
+          onCancel={() => setAskingMature(false)}
+        />
+      )}
 
       {pending && (
         <ConfirmDialog

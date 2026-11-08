@@ -87,7 +87,8 @@ export async function saveProfile(db, profile) {
     const store = tx.objectStore(STORE_PROFILES);
     const stored = await store.get(clean.id);
     if (!stored) throw new ConflictError('This profile was deleted in another tab.', { reason: 'deleted' });
-    if (stored.schemaVersion !== SCHEMA_VERSION) {
+    // Newer data is never overwritten by an older app (I-14). An older record is replaced by its migrated profile.
+    if (!Number.isInteger(stored.schemaVersion) || stored.schemaVersion > SCHEMA_VERSION) {
       throw new ConflictError('This profile was saved by a different version of the app.', { reason: 'version' });
     }
     if (stored.revision !== clean.revision) {

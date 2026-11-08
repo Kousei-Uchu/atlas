@@ -1,0 +1,17 @@
+/* Print styles (M4-07). Ink-friendly, no colour needed: state names are text (I-09).
+   Controls are hidden. A comparison prints on its own when its Print button was used. */
+@media print {
+  :root, :root[data-theme] { color-scheme: light; }
+  body { background: #fff; color: #000; }
+  .app-header .toolbar, .app-header select, .app-footer, .print-hide, button, select, summary,
+  .select-box, .item-actions, .panel-actions, .bulk-bar, .search-bar { display: none !important; }
+  .item-row, .picker-group, .compare, table { break-inside: avoid; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { border: 1px solid #000; padding: 0.25rem 0.4rem; text-align: left; }
+  a { color: #000; text-decoration: underline; }
+
+  html[data-print='compare'] body * { visibility: hidden; }
+  html[data-print='compare'] .compare[data-print-target='true'],
+  html[data-print='compare'] .compare[data-print-target='true'] * { visibility: visible; }
+  html[data-print='compare'] .compare[data-print-target='true'] { position: absolute; inset: 0 auto auto 0; width: 100%; }
+}

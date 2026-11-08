@@ -20,10 +20,13 @@ import { InlineRename } from './InlineRename.jsx';
  *   onDelete: (itemId: string) => void,
  *   order?: { canMoveEarlier: boolean, canMoveLater: boolean, onMove: (itemId: string, direction: 'earlier'|'later') => void } | null,
  *   selection?: { selected: boolean, onToggle: (itemId: string, selected: boolean) => void } | null,
+ *   renderAudiences?: ((item: object) => import('react').ReactNode) | null,  // what each audience sees; only for items that take a state
  * }} props
  */
-export function ItemRow({ profile, item, onAction, onSetState, onSetText, onSetNote, onSetShareable, onRename, onDelete, order = null, selection = null }) {
+export function ItemRow({ profile, item, onAction, onSetState, onSetText, onSetNote, onSetShareable, onRename, onDelete, order = null, selection = null, renderAudiences = null }) {
   const [noteOpen, setNoteOpen] = useState(false);
+  const [audiencesOpen, setAudiencesOpen] = useState(false);
+  const audiencesId = useId();
   const noteId = useId();
   const textId = useId();
   const answer = getAnswer(profile, item.id);
@@ -106,11 +109,26 @@ export function ItemRow({ profile, item, onAction, onSetState, onSetText, onSetN
         >
           {note ? 'Note (added)' : 'Note'}{' '}<span className="visually-hidden">for {item.label}</span>
         </button>
+        {renderAudiences && item.type === 'state' && (
+          <button
+            type="button"
+            className="quiet"
+            aria-expanded={audiencesOpen}
+            aria-controls={audiencesId}
+            onClick={() => setAudiencesOpen((open) => !open)}
+          >
+            Audiences{' '}<span className="visually-hidden">for {item.label}</span>
+          </button>
+        )}
         <InlineRename label={`item ${item.label}`} value={item.label} maxLength={LIMITS.labelLength} onSave={(next) => onRename(item.id, next)} />
         <button type="button" className="quiet danger-text" onClick={() => onDelete(item.id)}>
           Delete{' '}<span className="visually-hidden">item {item.label}</span>
         </button>
       </div>
+
+      {audiencesOpen && renderAudiences && item.type === 'state' && (
+        <div className="item-note" id={audiencesId}>{renderAudiences(item)}</div>
+      )}
 
       {noteOpen && (
         <div className="item-note" id={noteId}>

@@ -10,6 +10,8 @@ import { Notice } from '../components/Notice.jsx';
 import { BackupPanel } from '../features/import-export/BackupPanel.jsx';
 import { ProfilesPanel } from '../features/settings/ProfilesPanel.jsx';
 import { ModulesPanel } from '../features/modules/ModulesPanel.jsx';
+import { AudiencesPanel } from '../features/audiences/AudiencesPanel.jsx';
+import { ViewsPanel } from '../features/views/ViewsPanel.jsx';
 import { NewProfileFromModules } from '../features/modules/NewProfileFromModules.jsx';
 import { ClickSettings } from '../features/settings/ClickSettings.jsx';
 import { ThemeSwitch } from '../features/settings/ThemeSwitch.jsx';
@@ -27,7 +29,7 @@ function isTextTarget(target) {
 }
 
 /** The editor for an open database. Exported separately so tests can pass their own db. */
-export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), makeId, saveFile = downloadTextFile, estimate }) {
+export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), makeId, saveFile = downloadTextFile, saveBlob, makePng, estimate }) {
   const session = useProfileSession({ db, debounceMs, now, makeId });
   const { phase, profile, undo, redo } = session;
   // Called before any early return, so the saved theme applies even when the chart cannot load.
@@ -135,6 +137,8 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
         <PalettePanel profile={profile} run={session.run} announce={session.announce} />
         <ClickSettings profile={profile} run={session.run} announce={session.announce} />
         <ModulesPanel profile={profile} run={session.run} announce={session.announce} />
+        <AudiencesPanel profile={profile} run={session.run} announce={session.announce} />
+        <ViewsPanel profile={profile} run={session.run} announce={session.announce} now={now} saveFile={saveFile} saveBlob={saveBlob} makePng={makePng} />
         {managementPanels(profile.id, true)}
       </main>
 

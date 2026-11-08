@@ -24,6 +24,14 @@ function* words(t) {
   }
 }
 
+// Every string a person could read once mature phrasing is on (D-043).
+function* matureWords(t) {
+  for (const c of t.categories) {
+    if (c.mature) { yield c.mature.name; yield c.mature.description; }
+    for (const i of c.items) if (i.mature) { yield i.mature.label; yield i.mature.description; }
+  }
+}
+
 describe('the bundled catalogue (M3-01 to M3-05)', () => {
   it('has no problems, and every template listed in the spec so far', () => {
     expect(CATALOGUE_PROBLEMS).toEqual([]);
@@ -108,18 +116,18 @@ describe('the bundled catalogue (M3-01 to M3-05)', () => {
 
   it('uses plain wording: no em dashes, emoji or decorative symbols', () => {
     const banned = /[\u2014\u2013\u00A7\u2022\u2192\u2713\u2717]|\p{Extended_Pictographic}/u;
-    for (const t of TEMPLATES) for (const text of words(t)) expect(text, `${t.templateId}: ${text}`).not.toMatch(banned);
+    for (const t of TEMPLATES) for (const text of [...words(t), ...matureWords(t)]) expect(text, `${t.templateId}: ${text}`).not.toMatch(banned);
   });
 
   it('writes items as things people can have a preference about, not as labels for the person', () => {
     // I-10 and spec 12.3: no diagnoses, and nothing that assigns or suggests an identity label.
     const unwanted = /\b(autis|adhd|disorder|syndrome|diagnos|disabled person|transgender|cisgender|non-?binary|bisexual|asexual|lesbian|gay)\b/i;
-    for (const t of TEMPLATES) for (const text of words(t)) expect(text, `${t.templateId}: ${text}`).not.toMatch(unwanted);
+    for (const t of TEMPLATES) for (const text of [...words(t), ...matureWords(t)]) expect(text, `${t.templateId}: ${text}`).not.toMatch(unwanted);
   });
 
   it('never prefills a text item, and never suggests a pronoun set', () => {
     for (const t of TEMPLATES) {
-      for (const c of t.categories) for (const i of c.items) expect(Object.keys(i).sort(), i.key).toEqual(['description', 'key', 'label', 'sensitivity', 'tags', 'type']);
+      for (const c of t.categories) for (const i of c.items) expect(Object.keys(i).filter((k) => k !== 'mature').sort(), i.key).toEqual(['description', 'key', 'label', 'sensitivity', 'tags', 'type']);
     }
     const pronouns = getTemplate('names-pronouns');
     const text = [...words(pronouns)].join(' ');
@@ -135,9 +143,41 @@ describe('the bundled catalogue (M3-01 to M3-05)', () => {
     expect(labels).toMatch(/resting their head on my shoulder/);
   });
 
-  it('contains no explicit sexual wording in any template, including the restricted ones (spec 12.3)', () => {
-    const explicit = /\b(sex|sexual|sexually|erotic|genital\w*|arousal|aroused|orgasm|naked|nude|porn\w*|fetish\w*|kink\w*)\b/i;
-    for (const t of TEMPLATES) for (const text of words(t)) expect(text, `${t.templateId}: ${text}`).not.toMatch(explicit);
+  it('keeps the plain wording of every template free of explicit sexual wording, including the restricted ones (spec 12.3, D-043)', () => {
+    const explicit = /\b(sex|sexual|sexually|erotic|genital\w*|arousal|aroused|orgasm|naked|nude|porn\w*|fetish\w*|kink\w*|penis|testicl\w*|scrotum|vulva|vagin\w*|clitor\w*|anus|anal|oral|penetrat\w*|intercourse|masturbat\w*|ejaculat\w*|erect\w*)\b/i;
+    // "Biological sex" is a fact about a body, not sexual wording, so that one phrase is allowed.
+    const allowed = /\bbiological sex\b/gi;
+    for (const t of TEMPLATES) for (const text of words(t)) expect(text.replace(allowed, ''), `${t.templateId}: ${text}`).not.toMatch(explicit);
+  });
+
+  it('allows direct wording only as a mature variant, only in adult-intended templates, and always different from the plain wording (D-043)', () => {
+    let variants = 0;
+    for (const t of TEMPLATES) {
+      const has = t.categories.some((c) => c.mature || c.items.some((i) => i.mature));
+      if (has) expect(t.adultIntended, t.templateId).toBe(true);
+      for (const c of t.categories) {
+        if (c.mature) { variants += 1; expect([c.mature.name, c.mature.description], `${t.templateId}/${c.key}`).not.toEqual([c.name, c.description]); }
+        for (const i of c.items) if (i.mature) {
+          variants += 1;
+          expect([i.mature.label, i.mature.description], `${t.templateId}/${i.key}`).not.toEqual([i.label, i.description]);
+        }
+      }
+    }
+    expect(variants).toBeGreaterThanOrEqual(60);
+    // Only the two body and intimacy modules carry mature wording so far.
+    expect(TEMPLATES.filter((t) => t.categories.some((c) => c.mature || c.items.some((i) => i.mature))).map((t) => t.templateId).sort()).toEqual(['anatomy-compatibility', 'intimacy-boundaries']);
+  });
+
+  it('keeps the mature wording clinical: direct words for bodies and sex, never slang, erotic or fetish wording (D-043)', () => {
+    const slang = /\b(erotic\w*|porn\w*|fetish\w*|kink\w*|bdsm|slut\w*|whore\w*|cock|dick|pussy|cum|cumming|horny|naughty|dirty|sexy|hot|rimming|blowjob|handjob)\b/i;
+    for (const t of TEMPLATES) for (const text of matureWords(t)) expect(text, `${t.templateId}: ${text}`).not.toMatch(slang);
+  });
+
+  it('gives each mature wording its own unique label inside the template, so switching never merges two items (D-043)', () => {
+    for (const t of TEMPLATES) {
+      const labels = t.categories.flatMap((c) => c.items.map((i) => (i.mature?.label ?? i.label).toLowerCase()));
+      expect(new Set(labels).size, t.templateId).toBe(labels.length);
+    }
   });
 
   it('uses text items for anything the person writes, and never for a choice', () => {

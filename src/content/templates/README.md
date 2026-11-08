@@ -22,12 +22,14 @@ Copy a small file such as `communication.js`. The shape is checked by `src/domai
 - A template with any restricted content must set `defaultVisibility: 'hidden'`. A template about
   relationships, intimacy, attraction or the body also sets `adultIntended: true`, which shows the
   adult note before it is turned on. The emergency card is restricted but not for adults (D-037).
+- An item or category in an adult-intended template may carry `mature: { label, description }` (a category uses `name`). It is the direct wording used when the person turns on mature phrasing (D-043). It must differ from the plain wording, keep the same key, and stay unique within the template. A `mature` description that is left out keeps the plain one.
 - Every template carries `statement: 'preferences-not-consent'`. The wording is in
   `src/content/notices.js` and is shown with the template.
 
 ## Wording rules
 
 - Plain, neutral and non-clinical. No diagnoses and no suggested labels.
+- The plain wording of every template has no explicit sexual words (the one exception is the phrase "biological sex"). Direct words go only in a `mature` wording, and they are clinical: no slang, and nothing erotic. Giving and receiving, and each part of the body, are separate items. Any item about a part of the body must make sense with Not applicable.
 - Friendly and platonic contact is ordinary content, not an edge case.
 - Intimacy and attraction templates describe boundaries and preferences only.
 - Items ask about words, contact and situations. They do not ask the person to pick or confirm a

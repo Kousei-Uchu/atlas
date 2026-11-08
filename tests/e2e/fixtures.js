@@ -16,10 +16,15 @@ export const test = base.extend({
       if (new URL(url).origin !== origin) external.push(url);
     });
     page.external = external;
+    // Anything the Content-Security-Policy blocks is a bug: the page tried something it is not allowed to do (M6-01).
+    const blocked = [];
+    page.blocked = blocked;
+    page.on('console', (message) => { if (/Content Security Policy|Refused to (load|apply|execute|connect|frame|create)/i.test(message.text())) blocked.push(message.text()); });
     await page.goto('/');
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await use(page);
     expect(external, 'requests to other origins').toEqual([]);
+    expect(blocked, 'Content-Security-Policy violations').toEqual([]);
   },
 });
 

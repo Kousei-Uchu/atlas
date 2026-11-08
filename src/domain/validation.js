@@ -3,10 +3,11 @@
 import { LIMITS, SCHEMA_VERSION } from './limits.js';
 import { UNANSWERED_ID } from './defaults.js';
 import { profileSchema } from './schema.js';
+import { migrateProfile } from './migrations.js';
 
 export const ERROR_CODES = Object.freeze([
   'file-too-large', 'not-json', 'forbidden-key', 'too-deep', 'wrong-format',
-  'newer-version', 'unknown-fields', 'schema-invalid', 'integrity-invalid', 'over-limit',
+  'newer-version', 'missing-migration', 'migration-failed', 'unknown-fields', 'schema-invalid', 'integrity-invalid', 'over-limit',
 ]);
 
 const MESSAGES = {
@@ -16,6 +17,8 @@ const MESSAGES = {
   'too-deep': 'This file is nested more deeply than allowed, so it was not opened.',
   'wrong-format': 'This does not look like an Atlas backup file.',
   'newer-version': 'This file was made by a newer version of the app. Update the app and try again.',
+  'missing-migration': 'This file was made by an older version of the app that this version can no longer convert, so it was not opened. Your original has not been changed.',
+  'migration-failed': 'This file could not be converted to the current version, so it was not opened. Your original has not been changed.',
   'unknown-fields': 'This file contains fields this version does not recognise, so it was not opened.',
   'schema-invalid': 'Some values in this file are missing or not allowed.',
   'integrity-invalid': 'The contents of this file refer to things that do not exist or conflict with each other.',
@@ -85,6 +88,13 @@ export function validateProfile(raw) {
     return failure('schema-invalid', ['The profile is not an object.']);
   }
   if (typeof raw.schemaVersion === 'number' && raw.schemaVersion > SCHEMA_VERSION) return failure('newer-version');
+  // An older record is converted on a copy, one version at a time, and then checked like any other.
+  // Nothing is written here: the stored record stays as it was until the person saves (spec 9).
+  if (Number.isInteger(raw.schemaVersion) && raw.schemaVersion >= 1 && raw.schemaVersion < SCHEMA_VERSION) {
+    const migrated = migrateProfile(raw);
+    if (!migrated.ok) return failure(migrated.code === 'missing-migration' ? 'missing-migration' : 'migration-failed', [migrated.detail]);
+    return validateProfile(migrated.profile);
+  }
 
   // Count limits run before the schema so oversized lists are never walked by Zod.
   const over = COUNT_LIMITS
