@@ -17,5 +17,14 @@ export default defineConfig({
   projects: [
     { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
     { name: 'phone', use: { ...devices['Pixel 5'] } }, // touch viewport
+    // Other engines are opt-in because they need `npx playwright install firefox webkit` first (M6-03):
+    //   ATLAS_ALL_BROWSERS=1 npx playwright test
+    ...(process.env.ATLAS_ALL_BROWSERS
+      ? [
+          { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+          { name: 'safari', use: { ...devices['Desktop Safari'] } },
+          { name: 'iphone', use: { ...devices['iPhone 14'] } },
+        ]
+      : []),
   ],
 });

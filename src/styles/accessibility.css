@@ -62,3 +62,9 @@ input[type='checkbox'], input[type='radio'] { width: 1.5rem; height: 1.5rem; min
 /* Long labels, hints and file pickers wrap instead of pushing the page sideways at 320 px. */
 .panel-block, .panel-block > * { min-width: 0; }
 input[type='file'] { width: 100%; }
+
+/* M6-03: at 200% text a 12rem field is wider than a phone, so fields may shrink below their preferred width. */
+input:not([type='checkbox']):not([type='radio']), select, textarea { min-width: 0; max-width: 100%; box-sizing: border-box; }
+.add-form > *, .inline-rename > *, .search-bar, .search-fields > * { min-width: 0; max-width: 100%; }
+.item-row, .item-main, .item-main > *, .item-controls, .item-controls > *, .state-picker, .state-picker > * { min-width: 0; max-width: 100%; }
+.item-controls, .state-picker { flex-wrap: wrap; }
