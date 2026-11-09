@@ -68,3 +68,6 @@ input:not([type='checkbox']):not([type='radio']), select, textarea { min-width: 
 .add-form > *, .inline-rename > *, .search-bar, .search-fields > * { min-width: 0; max-width: 100%; }
 .item-row, .item-main, .item-main > *, .item-controls, .item-controls > *, .state-picker, .state-picker > * { min-width: 0; max-width: 100%; }
 .item-controls, .state-picker { flex-wrap: wrap; }
+
+.about-panel { margin-top: var(--space-3); }
+.about-panel summary { cursor: pointer; font-weight: 600; min-height: 24px; }

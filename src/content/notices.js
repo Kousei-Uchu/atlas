@@ -18,11 +18,11 @@ export const LOCAL_STORAGE_NOTICE =
   'Your charts are stored in this browser on this device. Clearing browser data, using private browsing, or switching device can remove them. Export a backup regularly. Other people who use this browser profile may be able to read them.';
 
 export const NO_UPLOAD_NOTICE =
-  'Nothing you enter is sent anywhere. The app has no accounts and no analytics.';
+  'Nothing you enter is sent anywhere. The app has no accounts and no analytics. Like any website, the host can see that this page was loaded. The app\u2019s own files, not your charts, are kept on this device so it can open without a connection.';
 
 /** Shown next to the backup export button, so it is never mistaken for a shared view. */
 export const BACKUP_NOTICE =
-  'A full backup contains everything in this profile, including every note. It is not encrypted. Keep it somewhere private.';
+  'A full backup contains everything in this profile, including every note. It is not encrypted. Keep it somewhere only you can open.';
 
 /** Shown when the person is about to import a file. */
 export const IMPORT_NOTICE =

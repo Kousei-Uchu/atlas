@@ -147,3 +147,12 @@ test('on a phone every button, link and field is at least 24 px square', async (
     .slice(0, 8).map(({ e, r }) => `${e.tagName}:${(e.getAttribute('aria-label') || e.textContent || '').trim().slice(0, 30)} ${Math.round(r.width)}x${Math.round(r.height)}`));
   expect(small).toEqual([]);
 });
+
+test('the data-handling section opens with the keyboard and reads in order (M6-05)', async ({ page }) => {
+  const summary = page.getByText('How the Atlas handles your data', { exact: true });
+  await summary.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { level: 3, name: 'What leaves this device' })).toBeVisible();
+  await expect(page.getByText('the host of this page can see that the page was loaded')).toBeVisible();
+  expect(await serious(page)).toEqual([]);
+});

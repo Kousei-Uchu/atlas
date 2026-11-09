@@ -9,6 +9,7 @@ Nothing you enter is sent anywhere. See `docs/ATLAS_SPEC_AND_PROGRESS.md` for th
 |---|---|
 | `npm ci` | Install exact pinned dependencies |
 | `npm run dev` | Dev server |
+| `npm run build` | Builds the app and writes the offline service worker (`dist/sw.js`) |
 | `npm run verify` | Lint, source scans, tests, production build, build checks |
 | `npm run test:e2e` | Playwright against the production build (needs `npx playwright install chromium` once) |
 

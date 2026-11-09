@@ -1,7 +1,7 @@
 // M1-15 / M1-AC-10: headers are defined once, and vercel.json matches them (D-024, I-06).
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { buildCsp, buildVercelHeaders, injectCsp } from '../../config/security.js';
+import { buildCsp, buildVercelHeaders, buildWorkerCsp, injectCsp } from '../../config/security.js';
 
 describe('content security policy', () => {
   it('blocks all network connections and third-party scripts', () => {
@@ -36,6 +36,25 @@ describe('vercel.json', () => {
 
   it('has no rewrites, because the app has no path routes (D-017)', () => {
     expect(file.rewrites).toBeUndefined();
+  });
+});
+
+describe('service worker headers (M6-04, D-059)', () => {
+  const file = JSON.parse(readFileSync('vercel.json', 'utf8'));
+  const worker = file.headers.find((h) => h.source === '/sw.js');
+  const page = file.headers[0];
+
+  it('lets only the worker script fetch, and only from its own origin', () => {
+    expect(buildWorkerCsp()).toContain("connect-src 'self'");
+    expect(buildWorkerCsp()).not.toMatch(/https?:|\*|unsafe/);
+    expect(worker.headers.find((h) => h.key === 'Content-Security-Policy').value).toBe(buildWorkerCsp());
+    expect(buildCsp()).toContain("connect-src 'none'");
+  });
+
+  it('keeps the page rule off sw.js and the worker file always revalidated', () => {
+    expect(page.source).toContain('sw');
+    expect(new RegExp(`^${page.source}$`.replace(/\\\\/g, '\\')).test('/sw.js')).toBe(false);
+    expect(worker.headers.find((h) => h.key === 'Cache-Control').value).toBe('no-cache');
   });
 });
 

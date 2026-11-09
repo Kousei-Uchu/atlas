@@ -31,15 +31,32 @@ export const OTHER_HEADERS = Object.freeze({
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
 });
 
-/** The `headers` section of vercel.json. */
+/**
+ * The service worker script is the one place that may fetch, and only from its own origin: its
+ * own CSP comes from the headers of sw.js, and `connect-src 'none'` would stop it caching the app
+ * (M6-04, D-059). Everything else about the policy is unchanged.
+ */
+export function buildWorkerCsp() {
+  return buildCsp().replace("connect-src 'none'", "connect-src 'self'");
+}
+
+/** The `headers` section of vercel.json: the page rule first, then the service worker's. */
 export function buildVercelHeaders() {
-  return [{
-    source: '/(.*)',
-    headers: [
-      { key: 'Content-Security-Policy', value: buildCsp() },
-      ...Object.entries(OTHER_HEADERS).map(([key, value]) => ({ key, value })),
-    ],
-  }];
+  const common = Object.entries(OTHER_HEADERS).map(([key, value]) => ({ key, value }));
+  return [
+    {
+      source: '/((?!sw\\.js$).*)',
+      headers: [{ key: 'Content-Security-Policy', value: buildCsp() }, ...common],
+    },
+    {
+      source: '/sw.js',
+      headers: [
+        { key: 'Content-Security-Policy', value: buildWorkerCsp() },
+        { key: 'Cache-Control', value: 'no-cache' },
+        ...common,
+      ],
+    },
+  ];
 }
 
 /**

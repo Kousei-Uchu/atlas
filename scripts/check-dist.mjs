@@ -29,6 +29,19 @@ for (const name of readdirSync(assetDir)) {
   for (const marker of ['jsQR', 'axe-core', 'fake-indexeddb']) if (js.includes(marker)) problems.push(`${name} contains ${marker}, a test-only library.`);
 }
 
+// The service worker (M6-04): present, same-origin only, and it lists exactly the built files.
+try {
+  const sw = readFileSync('dist/sw.js', 'utf8');
+  if (/https?:\/\//.test(sw)) problems.push('dist/sw.js names another origin.');
+  if (/indexedDB|localStorage/.test(sw.replace(/\/\/.*$/gm, ''))) problems.push('dist/sw.js touches storage.');
+  const listed = JSON.parse(sw.match(/const PRECACHE = (\[.*\]);/)[1]);
+  const built = [...readdirSync(assetDir).map((n) => `/assets/${n}`), '/index.html'];
+  for (const p of built) if (!listed.includes(p)) problems.push(`dist/sw.js does not list ${p}.`);
+  for (const p of listed) if (p !== '/' && !built.includes(p)) problems.push(`dist/sw.js lists ${p}, which was not built.`);
+} catch {
+  problems.push('dist/sw.js is missing or unreadable (npm run build writes it).');
+}
+
 if (problems.length > 0) {
   process.stderr.write(`Build check failed:\n- ${problems.join('\n- ')}\n`);
   process.exit(1);

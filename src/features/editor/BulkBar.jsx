@@ -84,7 +84,7 @@ export function BulkBar({ profile, ids, hiddenSelected, onSelectShown, onClear, 
     const clearing = noteText.trim() === '';
     return {
       title: clearing ? `Remove notes from ${count}?` : `Replace notes on ${count}?`,
-      text: `${plural(withNotes, 'selected item has', 'selected items have')} a note now, and ${withNotes === 1 ? 'it' : 'they'} will be replaced. Leave the box empty to remove those notes instead. Removing a note also turns off sharing for it. Notes stay private. ${UNDO_HINT}`,
+      text: `${plural(withNotes, 'selected item has', 'selected items have')} a note now, and ${withNotes === 1 ? 'it' : 'they'} will be replaced. Leave the box empty to remove those notes instead. Removing a note also turns off sharing for it. ${UNDO_HINT}`,
       confirm: clearing ? 'Remove notes' : 'Replace notes',
     };
   };

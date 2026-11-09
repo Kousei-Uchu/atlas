@@ -149,7 +149,7 @@ export function ItemRow({ profile, item, onAction, onSetState, onSetText, onSetN
             />
             <span>Allow this note to be included when I choose to share selected items</span>
           </label>
-          <p className="hint">Notes stay private unless you turn this on and include notes in an export.</p>
+          <p className="hint">Notes are left out of views and exports unless you turn this on and include notes in a view.</p>
         </div>
       )}
     </li>

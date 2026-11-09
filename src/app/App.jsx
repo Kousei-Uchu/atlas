@@ -1,6 +1,8 @@
 // App shell (M1-10): header with undo/redo and save status, the fixed notices,
 // the chart, and a polite live region. No routing and no hash links, because the
 // URL fragment is reserved for share links later (D-017).
+import { AboutPanel } from '../features/about/AboutPanel.jsx';
+import { UpdateNotice } from './UpdateNotice.jsx';
 import { useEffect, useState } from 'react';
 import { openAtlasDb } from '../storage/database.js';
 import { useProfileSession } from '../features/editor/use-profile-session.js';
@@ -122,6 +124,7 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
       </header>
 
       <main className="app-main" id="main" tabIndex={-1}>
+        <UpdateNotice />
         <Notice title="Preferences are not consent">{CONSENT_NOTICE}</Notice>
 
         {session.saveError && (
@@ -146,6 +149,7 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
       <footer className="app-footer">
         <Notice title="Where your data lives">{LOCAL_STORAGE_NOTICE}</Notice>
         <Notice title="Nothing is uploaded">{NO_UPLOAD_NOTICE}</Notice>
+        <AboutPanel />
       </footer>
 
       {/* Polite live region for state changes, undo and redo. */}

@@ -6,6 +6,8 @@ Summarises what the app guarantees today and what proves it. Invariant IDs refer
 
 Everything stays in this browser's IndexedDB. There are no accounts, no server, no analytics, no third-party scripts, fonts or CDNs (I-06). The only way data leaves is a file the person downloads. A full backup contains everything including notes, is not encrypted, and is labelled that way next to the button.
 
+The app's own files (not any data) are also kept by a small service worker so it opens offline (D-059). The worker is production-only, fetches only from its own origin, never stores anything it fetches, and never touches IndexedDB. A new version waits until the person chooses to reload.
+
 ## Controls and where they are checked
 
 | Control | Check |
@@ -37,6 +39,7 @@ Everything stays in this browser's IndexedDB. There are no accounts, no server, 
 - A share link is a bearer copy. Anyone who has it can read it, it is not encrypted, and browser history, messaging apps, screenshots and synced devices may keep copies. The app says this before a link is made (I-07). A link cannot be recalled.
 - If browser storage cannot be opened at all, the app shows a message and does not run an in-memory editor. A share link can still be opened and read.
 - A compromised build or hosting account could ship different code. CSP limits what shipped code can do but cannot stop a malicious deploy. Review dependency changes and Vercel access accordingly.
+- The service worker's script has a slightly different CSP from the page (`connect-src 'self'` instead of `'none'`), because a worker cannot cache without fetching. It lists only the built files and is checked at build time.
 - Dev-only: the dev server has no CSP because hot reload needs inline scripts.
 
 ## Reporting and review

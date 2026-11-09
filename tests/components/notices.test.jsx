@@ -18,7 +18,7 @@ describe('fixed notice wording (spec 14.2)', () => {
     expect(LOCAL_STORAGE_NOTICE).toBe('Your charts are stored in this browser on this device. Clearing browser data, using private browsing, or switching device can remove them. Export a backup regularly. Other people who use this browser profile may be able to read them.');
   });
   it('no upload', () => {
-    expect(NO_UPLOAD_NOTICE).toBe('Nothing you enter is sent anywhere. The app has no accounts and no analytics.');
+    expect(NO_UPLOAD_NOTICE).toBe('Nothing you enter is sent anywhere. The app has no accounts and no analytics. Like any website, the host can see that this page was loaded. The app\u2019s own files, not your charts, are kept on this device so it can open without a connection.');
   });
 });
 
