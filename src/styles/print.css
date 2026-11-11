@@ -15,3 +15,17 @@
   html[data-print='compare'] .compare[data-print-target='true'] * { visibility: visible; }
   html[data-print='compare'] .compare[data-print-target='true'] { position: absolute; inset: 0 auto auto 0; width: 100%; }
 }
+
+/* The printable page of a view (M8-02): hidden on screen. While it is being printed it is the only thing in
+   the document, so the PDF is just its own pages. It sits directly under <body> for that reason. */
+.print-sheet { display: none; }
+@media print {
+  html[data-print='export'] body > *:not(.print-sheet) { display: none !important; }
+  html[data-print='export'] .print-sheet { display: block; font-size: 12pt; line-height: 1.4; color: #000; background: #fff; }
+  html[data-print='export'] .print-sheet h1 { font-size: 20pt; margin: 0 0 0.5rem; }
+  html[data-print='export'] .print-sheet h2 { font-size: 14pt; margin: 1rem 0 0.25rem; break-after: avoid; }
+  html[data-print='export'] .print-sheet li { break-inside: avoid; margin: 0.15rem 0; overflow-wrap: anywhere; }
+  html[data-print='export'] .print-sheet .print-words { white-space: pre-wrap; }
+  html[data-print='export'] .print-sheet .print-note { margin: 0.1rem 0 0 1rem; font-style: italic; }
+  html[data-print='export'] .print-sheet .print-statement { border: 1px solid #000; padding: 0.4rem 0.6rem; margin: 0.6rem 0; }
+}

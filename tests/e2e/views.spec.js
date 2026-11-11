@@ -116,3 +116,31 @@ test('download a CSV that holds only what the view includes (M8-01)', async ({ p
   expect(text.split('\r\n').filter((l) => l.startsWith('"Sample:')).length).toBe(1);
   await expect(page.locator('[role="status"][aria-live="polite"]')).toContainText('Downloaded For my friends as CSV');
 });
+
+test('download a web page that holds only what the view includes, and opens with no script or request (M8-03)', async ({ page, context }) => {
+  await stateButton(page, HUG).click();
+  await makeView(page);
+  await expect(page.getByRole('button', { name: 'Download web page (HTML)' })).toBeDisabled();
+  await page.getByRole('checkbox', { name: new RegExp(`^${HUG}`) }).check();
+  const file = await download(page, 'Download web page (HTML)');
+  expect(file.suggestedFilename()).toMatch(/^atlas-for-my-friends-\d{4}-\d{2}-\d{2}\.html$/);
+  const html = fs.readFileSync(await file.path(), 'utf8');
+  expect(html).toContain(HUG);
+  expect(html).not.toContain('Sample: Communication');
+  expect(html).not.toMatch(/<script|<img|<link|<a[\s>]/i);
+
+  // Open the saved file as a stranger would: no console policy violations, and it shows the content.
+  const opened = await context.newPage();
+  const problems = [];
+  opened.on('console', (m) => { if (m.type() === 'error') problems.push(m.text()); });
+  const requests = [];
+  opened.on('request', (r) => { if (!r.url().startsWith('data:') && !r.url().startsWith('about:')) requests.push(r.url()); });
+  await opened.setContent(html);
+  await expect(opened.getByRole('heading', { name: 'For my friends' })).toBeVisible();
+  await expect(opened.getByText(HUG)).toBeVisible();
+  expect(problems).toEqual([]);
+  expect(requests).toEqual([]);
+  const found = (await new AxeBuilder({ page: opened }).analyze()).violations.filter((v) => ['serious', 'critical'].includes(v.impact));
+  expect(found.map((v) => v.id)).toEqual([]);
+  await expect(page.locator('[role="status"][aria-live="polite"]')).toContainText('Downloaded For my friends as HTML');
+});

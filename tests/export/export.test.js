@@ -9,6 +9,7 @@ import { addView } from '../../src/domain/view-commands.js';
 import { buildExportModel } from '../../src/domain/export-model.js';
 import { renderMarkdown, mdEscape } from '../../src/export/markdown.js';
 import { renderCsv, csvCell } from '../../src/export/csv.js';
+import { renderHtml } from '../../src/export/html.js';
 import { renderSvg, wrapText, xmlEscape } from '../../src/export/svg.js';
 import { exportFilename } from '../../src/export/filename.js';
 import { CONSENT_NOTICE } from '../../src/content/notices.js';
@@ -54,7 +55,7 @@ const build = (p) => buildExportModel(p, p.views[0], { generatedAt: NOW });
 const everything = (p) => {
   const { model } = build(p);
   const { svg } = renderSvg(model);
-  return `${JSON.stringify(model)}\n${renderMarkdown(model)}\n${renderCsv(model)}\n${svg}`;
+  return `${JSON.stringify(model)}\n${renderMarkdown(model)}\n${renderCsv(model)}\n${renderHtml(model)}\n${svg}`;
 };
 
 describe('buildExportModel: what is in it', () => {
@@ -354,5 +355,48 @@ describe('CSV export (M8-01, D-068)', () => {
 
   it('names the file with the csv extension', () => {
     expect(exportFilename('For friends', '2026-10-31', 'csv')).toBe('atlas-for-friends-2026-10-31.csv');
+  });
+});
+
+describe('standalone web page export (M8-03, D-070)', () => {
+  const html = (p) => renderHtml(build(p).model);
+
+  it('is a complete page with its own policy that forbids scripts, requests and forms', () => {
+    const text = html(withView(fixture()));
+    expect(text.startsWith('<!doctype html>')).toBe(true);
+    expect(text).toContain("default-src 'none'");
+    expect(text).toContain('<html lang="en">');
+    expect(text).toContain('<title>For friends</title>');
+    expect(text).toContain('<strong>Yes</strong>');
+    expect(text.split(CONSENT_NOTICE).length - 1).toBe(2);
+  });
+
+  it('has no script, image, link, form, frame, event handler or address in it', () => {
+    const text = html(withView(fixture(), { includeNotes: true }));
+    expect(text).not.toMatch(/<(script|img|link|iframe|object|embed|form|input|a|svg|video|audio|source)[\s>]/i);
+    expect(text).not.toMatch(/\son[a-z]+\s*=/i);
+    expect(text).not.toMatch(/https?:|javascript:|data:|url\(|@import/i);
+  });
+
+  it('escapes the person\'s text so it can never become markup', () => {
+    let p = withView(fixture());
+    p = must(setItemText(p, { itemId: 'item_text', text: '<script>alert(1)</script> & "quotes" <img src=x onerror=y>' }, NOW));
+    const text = html(p);
+    expect(text).not.toContain('<script>alert');
+    expect(text).not.toContain('<img');
+    expect(text).toContain('&lt;script&gt;alert(1)&lt;/script&gt; &amp; &quot;quotes&quot;');
+    const base = withView(fixture());
+    const titled = { ...base, views: [{ ...base.views[0], name: '</title><script>x</script>' }] };
+    expect(renderHtml(build(titled).model)).not.toContain('<script>x');
+  });
+
+  it('shows empty text as words, keeps notes only when notes are on, and holds back what the view holds back', () => {
+    let p = withView(fixture());
+    p = must(setItemText(p, { itemId: 'item_text', text: '' }, NOW));
+    expect(html(p)).toContain('(nothing written)');
+    expect(html(withView(fixture()))).not.toContain(SHARED_NOTE);
+    expect(html(withView(fixture(), { includeNotes: true }))).toContain(SHARED_NOTE);
+    const text = html(withView(fixture(), { includeNotes: true }));
+    for (const secret of [SECRET_ITEM, SECRET_SENSITIVE, SECRET_OTHER_AUDIENCE, SECRET_REASON, SECRET_TITLE, SECRET_NOTE]) expect(text).not.toContain(secret);
   });
 });

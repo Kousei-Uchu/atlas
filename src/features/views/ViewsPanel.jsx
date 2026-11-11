@@ -1,10 +1,11 @@
 // Views and exports (M4-05, M4-06): build a view of selected items for one audience, review exactly
-// what it would include and what is held back and why, then download it as Markdown, CSV, SVG or PNG.
+// what it would include and what is held back and why, then download it as Markdown, CSV, a web page, a printed page (PDF), SVG or PNG.
 //
 // Only turns choices into domain commands through `run` (I-05). What a view includes is decided by
 // `evaluateView` alone, and what an export contains comes from `buildExportModel` alone, so this
 // screen shows the same thing the file will hold (I-11). Closed by default, like the other panels.
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { LIMITS } from '../../domain/limits.js';
 import { newId } from '../../domain/ids.js';
@@ -18,6 +19,8 @@ import { buildExportModel } from '../../domain/export-model.js';
 import { CONSENT_NOTICE } from '../../content/notices.js';
 import { renderMarkdown } from '../../export/markdown.js';
 import { renderCsv } from '../../export/csv.js';
+import { renderHtml } from '../../export/html.js';
+import { PrintSheet } from './PrintSheet.jsx';
 import { renderSvg } from '../../export/svg.js';
 import { svgToPngBlob } from '../../export/png.js';
 import { exportFilename } from '../../export/filename.js';
@@ -139,6 +142,7 @@ function Review({ profile, view, evaluation, run, announce }) {
 function Exporter({ profile, view, evaluation, now, saveFile, saveBlob, makePng, announce, pageUrl, copyText }) {
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(false);
+  const [sheet, setSheet] = useState(null);
   const previewId = useId();
   const ready = evaluation.buildable && evaluation.included.length > 0;
   const model = () => buildExportModel(profile, view, { generatedAt: now() });
@@ -150,6 +154,7 @@ function Exporter({ profile, view, evaluation, now, saveFile, saveBlob, makePng,
     const date = built.model.date;
     try {
       if (format === 'md') saveFile(exportFilename(view.name, date, 'md'), renderMarkdown(built.model), 'text/markdown');
+      else if (format === 'html') saveFile(exportFilename(view.name, date, 'html'), renderHtml(built.model), 'text/html');
       else if (format === 'csv') saveFile(exportFilename(view.name, date, 'csv'), renderCsv(built.model), 'text/csv');
       else {
         const picture = renderSvg(built.model);
@@ -163,6 +168,31 @@ function Exporter({ profile, view, evaluation, now, saveFile, saveBlob, makePng,
   };
   const built = preview && ready ? model() : null;
 
+  // Printing to PDF (M8-02): the page is laid out from the export model, shown only while printing, and taken
+  // away again when the print dialog closes (or when the window gets focus back, for browsers that do not
+  // tell us). The person's browser makes the PDF; nothing leaves this device.
+  const printPage = () => {
+    setError('');
+    const built2 = model();
+    if (!built2.ok) { setError(built2.error); return; }
+    setSheet(built2.model);
+  };
+  useEffect(() => {
+    if (!sheet) return undefined;
+    const root = document.documentElement;
+    const done = () => {
+      root.removeAttribute('data-print');
+      window.removeEventListener('afterprint', done);
+      window.removeEventListener('focus', done);
+      setSheet(null);
+    };
+    root.setAttribute('data-print', 'export');
+    window.addEventListener('afterprint', done);
+    const later = setTimeout(() => window.addEventListener('focus', done), 500);
+    window.print();
+    return () => { clearTimeout(later); window.removeEventListener('afterprint', done); window.removeEventListener('focus', done); root.removeAttribute('data-print'); };
+  }, [sheet]);
+
   return (
     <section className="panel-block" aria-label="Export">
       <h4>Export</h4>
@@ -170,6 +200,8 @@ function Exporter({ profile, view, evaluation, now, saveFile, saveBlob, makePng,
       <div className="panel-actions">
         <button type="button" disabled={!ready} onClick={() => download('md')}>Download Markdown</button>
         <button type="button" disabled={!ready} onClick={() => download('csv')}>Download CSV spreadsheet</button>
+        <button type="button" disabled={!ready} onClick={() => download('html')}>Download web page (HTML)</button>
+        <button type="button" disabled={!ready} onClick={printPage}>Print or save as PDF</button>
         <button type="button" disabled={!ready} onClick={() => download('svg')}>Download SVG picture</button>
         <button type="button" disabled={!ready} onClick={() => download('png')}>Download PNG picture</button>
         <button type="button" disabled={!ready} aria-expanded={preview} aria-controls={previewId} onClick={() => setPreview((v) => !v)}>
@@ -178,6 +210,7 @@ function Exporter({ profile, view, evaluation, now, saveFile, saveBlob, makePng,
       </div>
       {!ready && <p className="hint">{evaluation.buildable ? 'Pick at least one item that can be included to export.' : 'Settle the problem above to export.'}</p>}
       {error && <p className="banner" role="alert" data-tone="error">{error}</p>}
+      {sheet && createPortal(<PrintSheet model={sheet} />, document.body)}
       {built?.ok && <textarea id={previewId} className="export-preview" readOnly rows={14} aria-label="Markdown preview" value={renderMarkdown(built.model)} />}
       <ShareLink profile={profile} view={view} ready={ready} now={now} announce={announce} onDownloadFile={() => download('md')} pageUrl={pageUrl} copyText={copyText} />
     </section>
