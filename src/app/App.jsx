@@ -3,6 +3,7 @@
 // URL fragment is reserved for share links later (D-017).
 import { TimelinePanel } from '../features/timeline/TimelinePanel.jsx';
 import { DimensionMapPanel } from '../features/dimension-map/DimensionMapPanel.jsx';
+import { OverlapRadialPanel } from '../features/overlap-radial/OverlapRadialPanel.jsx';
 import { RelationshipGraphPanel } from '../features/relationship-graph/RelationshipGraphPanel.jsx';
 import { ComparePanel } from '../features/compare/ComparePanel.jsx';
 import { DecisionTreePanel } from '../features/decision-tree/DecisionTreePanel.jsx';
@@ -152,6 +153,7 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
         <DecisionTreePanel profile={profile} />
         <ComparePanel profile={profile} profiles={session.profiles} readProfile={session.readProfile} />
         <RelationshipGraphPanel profile={profile} run={session.run} announce={session.announce} />
+        <OverlapRadialPanel profile={profile} />
         <BodyMapPanel profile={profile} run={session.run} announce={session.announce} />
         <AudiencesPanel profile={profile} run={session.run} announce={session.announce} />
         <ViewsPanel profile={profile} run={session.run} announce={session.announce} now={now} saveFile={saveFile} saveBlob={saveBlob} makePng={makePng} />

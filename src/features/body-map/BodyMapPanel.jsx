@@ -8,6 +8,7 @@
 //   - The map shows one group at a time ("from friends", "from family"...), each with its own answers.
 import { useId, useMemo, useState } from 'react';
 import { StateIcon } from '../../components/StateBadge.jsx';
+import { PatternDefs } from '../../components/PatternDefs.jsx';
 import { stepItemState } from '../../domain/commands.js';
 import { bodyMapGroups, bodyMapRows } from '../../domain/body-map.js';
 import { effectiveStateId, getState } from '../../domain/selectors.js';
@@ -18,23 +19,6 @@ function Shape({ shape, ...props }) {
   return shape.kind === 'ellipse'
     ? <ellipse cx={shape.cx} cy={shape.cy} rx={shape.rx} ry={shape.ry} {...props} />
     : <rect x={shape.x} y={shape.y} width={shape.width} height={shape.height} rx={shape.rx} {...props} />;
-}
-
-/** SVG pattern fills for the states that have one, drawn in that state's own text colour. */
-function PatternDefs({ idBase, states }) {
-  const seen = new Map();
-  for (const s of states) if (s.pattern && s.pattern !== 'solid') seen.set(`${s.pattern}-${s.textColor}`, s);
-  return (
-    <defs>
-      {[...seen.entries()].map(([key, s]) => (
-        <pattern key={key} id={`${idBase}-${key.replace('#', '')}`} patternUnits="userSpaceOnUse" width="8" height="8">
-          {s.pattern === 'dots' && <circle cx="4" cy="4" r="1.4" fill={s.textColor} />}
-          {s.pattern === 'stripes' && <path d="M-1 9L9 -1M-1 1L1 -1M7 9L9 7" stroke={s.textColor} strokeWidth="1.6" />}
-          {s.pattern === 'dashed' && <path d="M0 4H4" stroke={s.textColor} strokeWidth="1.6" />}
-        </pattern>
-      ))}
-    </defs>
-  );
 }
 
 function Figure({ view, rows, idBase, active, onAction, onActive }) {
