@@ -99,3 +99,20 @@ test('the views screen has no serious accessibility violations in any theme (M4-
     expect(serious, theme).toEqual([]);
   }
 });
+
+test('download a CSV that holds only what the view includes (M8-01)', async ({ page }) => {
+  await stateButton(page, HUG).click();
+  await makeView(page);
+  await expect(page.getByRole('button', { name: 'Download CSV spreadsheet' })).toBeDisabled();
+  await page.getByRole('checkbox', { name: new RegExp(`^${HUG}`) }).check();
+  const csv = await download(page, 'Download CSV spreadsheet');
+  expect(csv.suggestedFilename()).toMatch(/^atlas-for-my-friends-\d{4}-\d{2}-\d{2}\.csv$/);
+  const text = fs.readFileSync(await csv.path(), 'utf8');
+  expect(text.charCodeAt(0)).toBe(0xfeff);
+  expect(text).toContain('"Group","Item","Answer"');
+  expect(text).toContain(`"${HUG}","Unsure"`);
+  expect(text).toMatch(/not consent|preferences/i);
+  // The chart has more items than the view includes; none of them is in the file.
+  expect(text.split('\r\n').filter((l) => l.startsWith('"Sample:')).length).toBe(1);
+  await expect(page.locator('[role="status"][aria-live="polite"]')).toContainText('Downloaded For my friends as CSV');
+});

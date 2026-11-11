@@ -121,6 +121,7 @@ Every invariant has an enforcing test. A change that breaks one is a bug, not a 
 | D-065 | The comparison view lists where two charts on this device give different answers to the same module question, side by side. It reads and changes nothing, never reads own words or notes, and never scores or says whether charts fit. See `docs/decisions/0025-comparison-view.md`. |
 | D-066 | The relationship graph shows audiences with "Me" at the root and each audience inside the one it was placed in. The only new data path is `setAudienceParent` (no loops); positions are never stored; nothing rates or ranks a relationship. See `docs/decisions/0026-relationship-graph.md`. |
 | D-067 | The radial diagram and the audience overlap are read-only pictures with a list as the content: equal wedges with answer counts per state, and two audiences sorted into answered for both, for one only. Unanswered is never drawn or matched; nothing is totalled or scored; nothing is stored. See `docs/decisions/0027-radial-diagram-and-overlaps.md`. |
+| D-068 | CSV export renders the export model only, quotes every cell, starts with a byte-order mark, repeats the consent statement, and defuses spreadsheet formulas with a leading apostrophe. See `docs/decisions/0028-csv-export.md`. |
 
 ### 3.2 Open
 
@@ -780,9 +781,18 @@ The gate is reached when you sign off the two wording items above. Nothing else 
 
 Order: body map, multidimensional maps, timeline and snapshots, decision tree, comparison view, relationship graph, overlapping regions and radial diagrams. Each is its own mini-milestone with the section 13 requirements.
 
-### M8. Advanced modules  (not started)
+### M8. Advanced modules  (in progress)
 
 Further item types (multi-select, number, date, reference, structured pronoun sets), conditional rules and audience inheritance per spec §6.4, CSV and PDF, standalone HTML, password-protected export, community templates with an abuse and privacy review. Encrypted sync only after a separate threat model.
+
+- [x] M8-01 CSV export (decision D-068)
+- [ ] M8-02 PDF through the print stylesheet (O-007)
+- [ ] M8-03 Standalone HTML export
+- [ ] M8-04 Password-protected export (D-020; needs a threat note first)
+- [ ] M8-05 Further item types (multi-select, number, date, reference, structured pronoun sets, O-006)
+- [ ] M8-06 Conditional rules and audience inheritance (O-009)
+- [ ] M8-07 Community templates with an abuse and privacy review
+- [ ] M8-08 Encrypted sync, only after a separate threat model
 
 ---
 
@@ -885,3 +895,4 @@ Further item types (multi-select, number, date, reference, structured pronoun se
 | 2026-11-11 | M7-05 done: comparison view. `domain/profile-compare.js` and a "Compare charts" panel: pick another chart on this device and see a table of questions with different answers, plus plain counts of the same and of questions only one chart has. Read-only, no scoring, Unanswered kept as absence. Domain and e2e tests (axe in three themes, 320 px). |
 | 2026-11-11 | M7-06 done: relationship graph. `domain/relationship-graph.js`, a versioned layout file, `setAudienceParent` (refuses itself and its own children) and a "Relationship graph" panel: a decorative drawing plus a nested list with plain counts and a select to place an audience inside another. Validation now rejects audience parent loops. Domain and e2e tests (axe in three themes, 320 px). |
 | 2026-11-11 | M7-07 done: overlapping regions and radial diagram. `domain/radial-summary.js`, `domain/audience-overlap.js`, a versioned layout file, shared `PatternDefs`, and one "Radial diagram and overlaps" panel. Domain and e2e tests (axe in three themes, 320 px). All of M7 is now built. |
+| 2026-11-11 | M8-01 done: CSV export. `export/csv.js`, a "Download CSV spreadsheet" button, leak test extended to the CSV, formula-injection defence, unit and e2e tests. |

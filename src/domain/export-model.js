@@ -1,6 +1,6 @@
 // The export view model (spec 10.4, I-02, I-11; M4-06). Pure.
 //
-// Everything an export shows comes from here, and only from here. Markdown, SVG and PNG all render
+// Everything an export shows comes from here, and only from here. Markdown, CSV, SVG and PNG all render
 // this one model, so they cannot disagree and none of them can reach back into the profile.
 //
 // The model holds only what `evaluateView` included: no held-back item, no note that was not both

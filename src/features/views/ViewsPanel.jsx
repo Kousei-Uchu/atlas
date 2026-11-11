@@ -1,5 +1,5 @@
 // Views and exports (M4-05, M4-06): build a view of selected items for one audience, review exactly
-// what it would include and what is held back and why, then download it as Markdown, SVG or PNG.
+// what it would include and what is held back and why, then download it as Markdown, CSV, SVG or PNG.
 //
 // Only turns choices into domain commands through `run` (I-05). What a view includes is decided by
 // `evaluateView` alone, and what an export contains comes from `buildExportModel` alone, so this
@@ -17,6 +17,7 @@ import { evaluateView, REASON_TEXT } from '../../domain/view-inclusion.js';
 import { buildExportModel } from '../../domain/export-model.js';
 import { CONSENT_NOTICE } from '../../content/notices.js';
 import { renderMarkdown } from '../../export/markdown.js';
+import { renderCsv } from '../../export/csv.js';
 import { renderSvg } from '../../export/svg.js';
 import { svgToPngBlob } from '../../export/png.js';
 import { exportFilename } from '../../export/filename.js';
@@ -149,6 +150,7 @@ function Exporter({ profile, view, evaluation, now, saveFile, saveBlob, makePng,
     const date = built.model.date;
     try {
       if (format === 'md') saveFile(exportFilename(view.name, date, 'md'), renderMarkdown(built.model), 'text/markdown');
+      else if (format === 'csv') saveFile(exportFilename(view.name, date, 'csv'), renderCsv(built.model), 'text/csv');
       else {
         const picture = renderSvg(built.model);
         if (format === 'svg') saveFile(exportFilename(view.name, date, 'svg'), picture.svg, 'image/svg+xml');
@@ -167,6 +169,7 @@ function Exporter({ profile, view, evaluation, now, saveFile, saveBlob, makePng,
       <p className="hint">Every export carries this statement and a key to its states: {CONSENT_NOTICE}</p>
       <div className="panel-actions">
         <button type="button" disabled={!ready} onClick={() => download('md')}>Download Markdown</button>
+        <button type="button" disabled={!ready} onClick={() => download('csv')}>Download CSV spreadsheet</button>
         <button type="button" disabled={!ready} onClick={() => download('svg')}>Download SVG picture</button>
         <button type="button" disabled={!ready} onClick={() => download('png')}>Download PNG picture</button>
         <button type="button" disabled={!ready} aria-expanded={preview} aria-controls={previewId} onClick={() => setPreview((v) => !v)}>

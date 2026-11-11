@@ -8,6 +8,7 @@ import { addAudience, setOverride } from '../../src/domain/audience-commands.js'
 import { addView } from '../../src/domain/view-commands.js';
 import { buildExportModel } from '../../src/domain/export-model.js';
 import { renderMarkdown, mdEscape } from '../../src/export/markdown.js';
+import { renderCsv, csvCell } from '../../src/export/csv.js';
 import { renderSvg, wrapText, xmlEscape } from '../../src/export/svg.js';
 import { exportFilename } from '../../src/export/filename.js';
 import { CONSENT_NOTICE } from '../../src/content/notices.js';
@@ -53,7 +54,7 @@ const build = (p) => buildExportModel(p, p.views[0], { generatedAt: NOW });
 const everything = (p) => {
   const { model } = build(p);
   const { svg } = renderSvg(model);
-  return `${JSON.stringify(model)}\n${renderMarkdown(model)}\n${svg}`;
+  return `${JSON.stringify(model)}\n${renderMarkdown(model)}\n${renderCsv(model)}\n${svg}`;
 };
 
 describe('buildExportModel: what is in it', () => {
@@ -298,5 +299,60 @@ describe('file names', () => {
     expect(exportFilename('../../etc/passwd', '2026-10-31', 'svg')).toBe('atlas-etc-passwd-2026-10-31.svg');
     expect(exportFilename('\u3053\u3093\u306b\u3061\u306f', '2026-10-31', 'png')).toBe('atlas-view-2026-10-31.png');
     expect(exportFilename('x', 'bad', 'md')).toBe('atlas-x-undated.md');
+  });
+});
+
+describe('CSV export (M8-01, D-068)', () => {
+  const csv = (p) => renderCsv(build(p).model);
+
+  it('has a byte-order mark, CRLF rows, a header, the answers, the legend and the consent statement twice', () => {
+    const text = csv(withView(fixture()));
+    expect(text.startsWith('\uFEFF')).toBe(true);
+    expect(text).toContain('"Group","Item","Answer"\r\n');
+    expect(text).toContain('"Category normal","An open item","Yes"');
+    expect(text.split(CONSENT_NOTICE).length - 1).toBe(2);
+    expect(text).toContain('"State","Meaning"');
+  });
+
+  it('adds a Note column only when notes are on and a shareable note is in the export, and never the private ones', () => {
+    const off = csv(withView(fixture()));
+    expect(off).not.toContain('"Note"');
+    expect(off).not.toContain(SHARED_NOTE);
+    const on = csv(withView(fixture(), { includeNotes: true }));
+    expect(on).toContain('"Group","Item","Answer","Note"');
+    expect(on).toContain(SHARED_NOTE);
+    expect(on).not.toContain(SECRET_NOTE);
+  });
+
+  it('quotes commas, quotes and line breaks so the columns never shift', () => {
+    expect(csvCell('a, "b"\nc')).toBe('"a, ""b""\nc"');
+    expect(csvCell('line\r\nbreak')).toBe('"line\nbreak"');
+  });
+
+  it('defuses spreadsheet formulas in the person\'s own text, and only there', () => {
+    for (const bad of ['=SUM(A1)', '+1', '-1', '@cmd', '\t=x', '\r=x', ' =x', '\n=x']) expect(csvCell(bad)).toMatch(/^"'/);
+    expect(csvCell('Fine = text')).toBe('"Fine = text"');
+    expect(csvCell('')).toBe('""');
+    let p = withView(fixture());
+    p = must(setItemText(p, { itemId: 'item_text', text: '=HYPERLINK("http://x","y")' }, NOW));
+    const text = csv(p);
+    expect(text).not.toMatch(/(^|,)"=/m);
+    expect(text).toContain(`"'=HYPERLINK(""http://x"",""y"")"`);
+  });
+
+  it('shows empty text as words and drops control characters', () => {
+    let p = withView(fixture());
+    p = must(setItemText(p, { itemId: 'item_text', text: '' }, NOW));
+    expect(csv(p)).toContain('(nothing written)');
+    expect(csvCell('a\u0000b\u0007c')).toBe('"abc"');
+  });
+
+  it('holds back what the view holds back, like every other format', () => {
+    const text = csv(withView(fixture()));
+    for (const secret of [SECRET_ITEM, SECRET_SENSITIVE, SECRET_OTHER_AUDIENCE, SECRET_REASON, SECRET_TITLE]) expect(text).not.toContain(secret);
+  });
+
+  it('names the file with the csv extension', () => {
+    expect(exportFilename('For friends', '2026-10-31', 'csv')).toBe('atlas-for-friends-2026-10-31.csv');
   });
 });
