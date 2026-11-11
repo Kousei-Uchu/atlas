@@ -91,10 +91,10 @@ describe('revision checks (M1-AC-13, R-04)', () => {
   });
   it('does not overwrite a record saved by a newer schema version (I-14)', async () => {
     const created = await createProfile(db, starter());
-    await db.put(STORE_PROFILES, { ...created, schemaVersion: 2 });
+    await db.put(STORE_PROFILES, { ...created, schemaVersion: 99 });
     const err = await saveProfile(db, { ...created, title: 'Old app' }).catch((e) => e);
     expect(err).toBeInstanceOf(ConflictError);
-    expect((await loadRawRecord(db, 'profile_a')).schemaVersion).toBe(2);
+    expect((await loadRawRecord(db, 'profile_a')).schemaVersion).toBe(99);
   });
   it('rejects an invalid profile before touching storage', async () => {
     const created = await createProfile(db, starter());

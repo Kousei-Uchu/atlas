@@ -74,7 +74,7 @@ export function parseJsonText(text, { maxBytes = LIMITS.backupFileBytes } = {}) 
 const COUNT_LIMITS = [
   ['states', LIMITS.states], ['categories', LIMITS.categories], ['items', LIMITS.items],
   ['answers', LIMITS.answers], ['audiences', LIMITS.audiences], ['overrides', LIMITS.overrides],
-  ['views', LIMITS.views],
+  ['views', LIMITS.views], ['snapshots', LIMITS.snapshots],
 ];
 
 /**
@@ -143,6 +143,11 @@ export function checkIntegrity(p) {
   const audienceIds = unique('audience', p.audiences.map((a) => a.id));
   unique('override', p.overrides.map((o) => o.id));
   unique('view', p.views.map((v) => v.id));
+  // History (M7-03): ids are unique, and all snapshots together stay inside one budget.
+  unique('snapshot', p.snapshots.map((s) => s.id));
+  const entryTotal = p.snapshots.reduce((n, s) => n + s.entries.length, 0);
+  if (entryTotal > LIMITS.snapshotEntries) add(`Snapshots hold ${entryTotal} answers in all, the limit is ${LIMITS.snapshotEntries}.`);
+  for (const snap of p.snapshots) unique(`item in snapshot ${snap.id}`, snap.entries.map((e) => e.itemId));
   unique('answer', p.answers.map((a) => a.itemId));
 
   // States: Unanswered is a fixed, neutral member of the cycle.
@@ -196,6 +201,14 @@ export function checkIntegrity(p) {
 
   for (const a of p.audiences) {
     if (a.parentId !== null && !audienceIds.has(a.parentId)) add(`Audience ${a.id} has a missing parent: ${a.parentId}`);
+    if (a.parentId !== null && audienceIds.has(a.parentId)) {
+      // Walk up the parents; a loop would leave an audience with no top (M7-06).
+      const byAudience = new Map(p.audiences.map((x) => [x.id, x]));
+      const walked = new Set([a.id]);
+      let up = byAudience.get(a.parentId);
+      while (up && !walked.has(up.id)) { walked.add(up.id); up = up.parentId === null ? undefined : byAudience.get(up.parentId); }
+      if (up) add(`Audience ${a.id} is inside itself through its parents`);
+    }
   }
   for (const o of p.overrides) {
     if (!itemIds.has(o.itemId)) add(`Override ${o.id} refers to a missing item: ${o.itemId}`);

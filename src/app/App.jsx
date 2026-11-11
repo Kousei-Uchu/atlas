@@ -1,6 +1,12 @@
 // App shell (M1-10): header with undo/redo and save status, the fixed notices,
 // the chart, and a polite live region. No routing and no hash links, because the
 // URL fragment is reserved for share links later (D-017).
+import { TimelinePanel } from '../features/timeline/TimelinePanel.jsx';
+import { DimensionMapPanel } from '../features/dimension-map/DimensionMapPanel.jsx';
+import { RelationshipGraphPanel } from '../features/relationship-graph/RelationshipGraphPanel.jsx';
+import { ComparePanel } from '../features/compare/ComparePanel.jsx';
+import { DecisionTreePanel } from '../features/decision-tree/DecisionTreePanel.jsx';
+import { BodyMapPanel } from '../features/body-map/BodyMapPanel.jsx';
 import { AboutPanel } from '../features/about/AboutPanel.jsx';
 import { UpdateNotice } from './UpdateNotice.jsx';
 import { useEffect, useState } from 'react';
@@ -141,6 +147,12 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
         <PalettePanel profile={profile} run={session.run} announce={session.announce} />
         <ClickSettings profile={profile} run={session.run} announce={session.announce} />
         <ModulesPanel profile={profile} run={session.run} announce={session.announce} />
+        <TimelinePanel profile={profile} run={session.run} announce={session.announce} onMakeProfile={session.createProfileFromSnapshot} />
+        <DimensionMapPanel profile={profile} run={session.run} announce={session.announce} />
+        <DecisionTreePanel profile={profile} />
+        <ComparePanel profile={profile} profiles={session.profiles} readProfile={session.readProfile} />
+        <RelationshipGraphPanel profile={profile} run={session.run} announce={session.announce} />
+        <BodyMapPanel profile={profile} run={session.run} announce={session.announce} />
         <AudiencesPanel profile={profile} run={session.run} announce={session.announce} />
         <ViewsPanel profile={profile} run={session.run} announce={session.announce} now={now} saveFile={saveFile} saveBlob={saveBlob} makePng={makePng} />
         {managementPanels(profile.id, true)}

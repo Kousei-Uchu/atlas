@@ -9,10 +9,10 @@ import { LIMITS } from '../../src/domain/limits.js';
 const EXPECTED_IDS = [
   'starter', 'names-pronouns', 'gendered-language', 'physical-contact', 'personal-space', 'communication', 'emotional-support',
   'sensory-profile', 'accessibility-needs', 'privacy-digital', 'school-work', 'everyday-practical', 'conflict-repair', 'instruction-sheet', 'overwhelm-plan',
-  'relationship-affection', 'intimacy-boundaries', 'attraction', 'anatomy-compatibility', 'gender-expression', 'body-comfort', 'emergency-card',
+  'relationship-affection', 'intimacy-boundaries', 'attraction', 'anatomy-compatibility', 'gender-expression', 'body-comfort', 'emergency-card', 'body-contact-map',
 ];
 
-const RESTRICTED_IDS = ['relationship-affection', 'intimacy-boundaries', 'attraction', 'anatomy-compatibility', 'gender-expression', 'emergency-card'];
+const RESTRICTED_IDS = ['relationship-affection', 'intimacy-boundaries', 'attraction', 'anatomy-compatibility', 'gender-expression', 'emergency-card', 'body-contact-map'];
 const HIDDEN_IDS = [...RESTRICTED_IDS, 'body-comfort'];
 
 // Every string a person could read in a template.

@@ -7,6 +7,8 @@ Plain list for people trying the beta. The security-side list is in `SECURITY_AN
 - Backups and exports are not encrypted. Password-protected export is planned (M8).
 - Anyone who can use this browser profile can read the charts.
 
+- Snapshots (an earlier copy of your answers, not notes or your own words) stay in a profile and in its backups until you delete them. Deleting an item does not remove it from a snapshot.
+
 **Sharing**
 - A share link or QR code is a copy. Anyone holding it can read it, and messaging apps, history, screenshots and synced devices may keep copies. The app cannot take it back.
 - Very large charts (over about 100 KB) default to a file instead of a link. QR codes are only offered for short links.

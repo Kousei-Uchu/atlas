@@ -71,3 +71,57 @@ input:not([type='checkbox']):not([type='radio']), select, textarea { min-width: 
 
 .about-panel { margin-top: var(--space-3); }
 .about-panel summary { cursor: pointer; font-weight: 600; min-height: 24px; }
+
+/* Body map (M7-01). Regions are pointer-only; the list is the accessible way in. */
+.bm-layout { display: grid; gap: var(--space-4); grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 52rem) { .bm-layout { grid-template-columns: minmax(0, 26rem) minmax(0, 1fr); align-items: start; } }
+.bm-figures { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.bm-figure { margin: 0; flex: 1 1 8rem; min-width: 0; text-align: center; }
+.bm-svg { width: 100%; max-height: 28rem; height: auto; }
+.bm-region { cursor: pointer; }
+.bm-region[data-missing] { cursor: default; opacity: 0.45; }
+.bm-shape { fill: var(--state-bg, transparent); stroke: var(--text); stroke-width: 1.5; }
+.bm-pattern { pointer-events: none; stroke: none; }
+.bm-icon { color: var(--state-fg, var(--text)); pointer-events: none; }
+.bm-region[data-active] .bm-shape { stroke: var(--focus); stroke-width: 4; }
+.bm-list { width: 100%; border-collapse: collapse; }
+.bm-list th, .bm-list td { text-align: left; padding: 0.25rem 0.4rem; border-bottom: 1px solid var(--border, currentColor); }
+.bm-list tr[data-active] { outline: 2px solid var(--focus); outline-offset: -2px; }
+@media (forced-colors: active) { .bm-shape { fill: Canvas; stroke: CanvasText; } .bm-region[data-active] .bm-shape { stroke: Highlight; } }
+
+/* Dimension map (M7-02). Each axis is its own radio group; stops wrap so nothing is cut off at 320 px or 200% text. */
+.dm-group { margin-top: var(--space-4); }
+.dm-axis { display: grid; gap: var(--space-2); padding: var(--space-2) 0; border-bottom: 1px solid var(--border, currentColor); }
+.dm-label { font-weight: 600; }
+.dm-stops { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.dm-stop { min-width: 24px; min-height: 24px; padding: 0.25rem 0.6rem; border: 1px solid var(--text); border-radius: var(--radius); background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.dm-stop[data-checked] { padding: 0; border-width: 2px; }
+.dm-stop-label { font-size: 0.95rem; }
+@media (forced-colors: active) { .dm-stop[data-checked] { border-color: Highlight; } }
+
+/* Timeline (M7-03). */
+.tl-list { padding-left: var(--space-4); }
+.tl-point { margin-bottom: var(--space-3); }
+.tl-actions, .tl-selects { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.tl-changes { margin: 0 0 var(--space-3); padding-left: var(--space-4); }
+.tl-compare { margin-top: var(--space-2); }
+
+/* Decision tree (M7-04) */
+.dt-tree, .dt-leaves, .dt-tree ul { margin: var(--space-2) 0; padding-left: var(--space-4); }
+.dt-tree summary { font-weight: 600; cursor: pointer; min-height: 24px; padding: 0.25rem 0; }
+.dt-leaves li { overflow-wrap: anywhere; padding: 0.15rem 0; }
+
+/* Comparison view (M7-05) */
+.table-scroll { overflow-x: auto; max-width: 100%; }
+.cmp-table { border-collapse: collapse; width: 100%; }
+.cmp-table caption { text-align: left; font-weight: 600; padding: var(--space-2) 0; }
+.cmp-table th, .cmp-table td { text-align: left; vertical-align: top; padding: var(--space-2); border-bottom: 1px solid var(--border, currentColor); overflow-wrap: anywhere; }
+
+/* Relationship graph (M7-06) */
+.rg-figure { max-width: 100%; }
+.rg-svg { display: block; width: 100%; max-width: 100%; height: auto; }
+.rg-edge { fill: none; stroke: var(--text); stroke-width: 1.5; opacity: 0.6; }
+.rg-node rect { fill: transparent; stroke: var(--text); stroke-width: 2; }
+.rg-node text { fill: var(--text); font-size: 13px; }
+.rg-list, .rg-list ul { padding-left: var(--space-4); }
+.rg-list li { overflow-wrap: anywhere; padding: 0.15rem 0; }

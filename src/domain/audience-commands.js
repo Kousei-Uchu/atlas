@@ -67,6 +67,28 @@ export function updateAudience(profile, { id, name, type, description }, now) {
 }
 
 /**
+ * Place an audience inside another one, or at the top level (`parentId: null`). Used by the relationship graph
+ * (M7-06). An audience cannot sit inside itself or inside one of its own children.
+ * @param {{ id: string, parentId: string | null }} args
+ */
+export function setAudienceParent(profile, { id, parentId }, now) {
+  const current = profile.audiences.find((a) => a.id === id);
+  if (!current) return fail('That audience no longer exists.');
+  const target = parentId ?? null;
+  if (target !== null) {
+    const parent = profile.audiences.find((a) => a.id === target);
+    if (!parent) return fail('The audience to place it inside no longer exists.');
+    for (let cursor = parent, hops = 0; cursor; hops += 1) {
+      if (cursor.id === id) return fail('An audience cannot be placed inside itself or inside one of its own.');
+      if (hops > profile.audiences.length) break;
+      cursor = cursor.parentId === null ? null : profile.audiences.find((a) => a.id === cursor.parentId);
+    }
+  }
+  if (current.parentId === target) return ok(profile);
+  return ok(touch({ ...profile, audiences: profile.audiences.map((a) => (a.id === id ? { ...a, parentId: target } : a)) }, now));
+}
+
+/**
  * Views that use an audience. Deleting the audience would drop its overrides, and a view
  * built on it could then show the default answer instead, which may be more open. So the
  * delete is refused until those views are changed or removed.

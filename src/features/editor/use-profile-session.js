@@ -13,6 +13,7 @@ import { canRedo, canUndo, commit, createHistory, redo as redoHistory, syncRevis
 import { createStarterProfile } from '../../domain/defaults.js';
 import { newId } from '../../domain/ids.js';
 import { duplicateProfile } from '../../domain/profile-commands.js';
+import { profileFromSnapshot } from '../../domain/timeline.js';
 import { buildProfileFromModules } from '../../domain/profile-from-modules.js';
 import {
   ConflictError, createProfile, deleteAllData, deleteProfile, listProfiles, loadProfile,
@@ -322,6 +323,29 @@ export function useProfileSession({ db, now = defaultNow, makeId = newId, deboun
     return true;
   }, [db, enter, flush, makeId, now]);
 
+  /**
+   * Store a snapshot's answers as a NEW profile and open it. The original is not changed (I-12).
+   * @returns {Promise<{ ok: boolean, skipped?: number }>}
+   */
+  const createProfileFromSnapshot = useCallback(async (snapshotId) => {
+    const current = historyRef.current?.present;
+    if (!current) return { ok: false };
+    await flush();
+    if (dirtyRef.current && !blockedRef.current) {
+      setActionError('Your latest changes could not be saved yet. Try saving again, or download a backup, before making a new profile.');
+      return { ok: false };
+    }
+    if (blockedRef.current) {
+      setActionError('Editing is paused because this profile changed in another tab. Reload to continue.');
+      return { ok: false };
+    }
+    const made = profileFromSnapshot(historyRef.current.present, snapshotId, { id: makeId('profile') }, now());
+    if (!made.ok) { setActionError(made.error); return { ok: false }; }
+    const stored = await importProfileAsNew(db, made.profile, { makeId: () => makeId('profile') });
+    enter(stored);
+    return { ok: true, skipped: made.skipped };
+  }, [db, enter, flush, makeId, now]);
+
   /** Save an already-validated imported profile as a NEW profile and open it (I-12). */
   const importProfile = useCallback(async (profile) => {
     await flush();
@@ -349,6 +373,12 @@ export function useProfileSession({ db, now = defaultNow, makeId = newId, deboun
     await selectProfile(historyRef.current?.present.id ?? null);
   }, [selectProfile]);
 
+  /** Read another stored profile for comparing. Reading never writes (I-14) and never changes the open profile. */
+  const readProfile = useCallback(async (id) => {
+    const result = await loadProfile(db, id);
+    return result.ok ? { ok: true, profile: result.profile } : { ok: false };
+  }, [db]);
+
   const profile = history?.present ?? null;
 
   return {
@@ -356,8 +386,8 @@ export function useProfileSession({ db, now = defaultNow, makeId = newId, deboun
     saveStatus, saveError, announcement, actionError,
     canUndo: history ? canUndo(history) : false,
     canRedo: history ? canRedo(history) : false,
-    run, undo, redo, announce, retrySave, flush,
-    switchProfile, createNewProfile, createProfileFromModules, duplicateCurrentProfile, importProfile, removeProfile, removeEverything, reloadFromStorage,
+    run, undo, redo, announce, retrySave, flush, readProfile,
+    switchProfile, createNewProfile, createProfileFromModules, duplicateCurrentProfile, createProfileFromSnapshot, importProfile, removeProfile, removeEverything, reloadFromStorage,
     dismissActionError: () => setActionError(null),
   };
 }

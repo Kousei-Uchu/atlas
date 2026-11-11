@@ -8,6 +8,8 @@ Everything stays in this browser's IndexedDB. There are no accounts, no server, 
 
 The app's own files (not any data) are also kept by a small service worker so it opens offline (D-059). The worker is production-only, fetches only from its own origin, never stores anything it fetches, and never touches IndexedDB. A new version waits until the person chooses to reload.
 
+A profile can hold snapshots, earlier copies of its state answers (D-063, schema version 2). They hold no notes, own words, audiences or views, are part of backups, and are never in views, exports or share links. The version 1 to 2 migration runs on a copy, never writes on read, and an older app refuses version 2 data.
+
 ## Controls and where they are checked
 
 | Control | Check |

@@ -1,6 +1,7 @@
 // Single source of truth for size and count limits (spec 5.8).
 
-export const SCHEMA_VERSION = 1;
+// Version 2 adds `snapshots` (M7-03, D-063). Version 1 profiles are migrated on a copy (src/domain/migrations.js).
+export const SCHEMA_VERSION = 2;
 export const BACKUP_FORMAT_VERSION = 1;
 
 export const LIMITS = Object.freeze({
@@ -12,6 +13,9 @@ export const LIMITS = Object.freeze({
   audiences: 50,
   overrides: 5000,
   views: 50,
+  snapshots: 20,
+  // All entries across all snapshots together, so history can never grow a profile past what a backup can hold.
+  snapshotEntries: 10_000,
   answers: 2000,
   labelLength: 200,
   categoryNameLength: 120,

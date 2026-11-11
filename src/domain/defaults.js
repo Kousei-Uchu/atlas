@@ -85,6 +85,7 @@ export function createStarterProfile({ id, now, title = 'My profile' }) {
     audiences: [],
     overrides: [],
     views: [],
+    snapshots: [],
     metadata: { templateIds: ['starter'] },
   };
 }

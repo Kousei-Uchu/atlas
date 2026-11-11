@@ -20,6 +20,7 @@ Every fixed sentence about data, sharing and limits, with what makes it true. Wo
 | Share notice (wherever a link is made) | Anyone with the link can read it; not encrypted; copies may persist | I-07, share tests |
 | Delete-all description | Removes every profile, answer and note in this browser; not downloaded files | delete-all test |
 | Notes hints (item and bulk) | Notes are left out of views and exports unless shared on purpose | inclusion rule D-044, leak tests |
+| Timeline notice, backup notice, data-handling page | Snapshots keep answers only; deleting an item does not remove it from a snapshot; backups include snapshots; never in views, exports or links | Schema (no note or text fields in a snapshot), leak test, backup includes the profile (D-063) |
 | "How the Atlas handles your data" | The same facts in one place, including: host sees a page load; text after the # of a share link is not sent; delete cannot reach copies already made | Fragments are never sent in an HTTP request; delete-all scope |
 
 ## Changes made in this review

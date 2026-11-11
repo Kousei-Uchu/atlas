@@ -47,6 +47,7 @@ describe('the data-handling page says each true thing it must', () => {
     ['offline files are kept', /own files .* are also kept on this device/],
     ['links are readable by anyone and not encrypted', /Anyone who has it can read it\. It is not encrypted/],
     ['backups are not encrypted', /full backup holds everything[^]*It is not encrypted/],
+    ['snapshots keep answers only and outlive deleted items', /snapshot keeps an earlier copy of your answers \(not notes or your own words\)[^]*Deleting an item does not remove it from a snapshot/],
     ['delete cannot reach copies made already', /cannot reach backup files, exports or links/],
     ['not consent', /not permission, and it does not replace asking/],
     ['browser data can vanish and others may read it', /Clearing browser data[^.]*\. ?|other people who use this browser profile may be able to read them/],

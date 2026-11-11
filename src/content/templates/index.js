@@ -24,11 +24,12 @@ import anatomyCompatibility from './anatomy-compatibility.js';
 import genderExpression from './gender-expression.js';
 import bodyComfort from './body-comfort.js';
 import emergencyCard from './emergency-card.js';
+import bodyContactMap from './body-contact-map.js';
 
 const RAW_TEMPLATES = [
   starter, namesPronouns, genderedLanguage, physicalContact, personalSpace, communication, emotionalSupport,
   sensoryProfile, accessibilityNeeds, privacyDigital, schoolWork, everydayPractical, conflictRepair, instructionSheet, overwhelmPlan,
-  relationshipAffection, intimacyBoundaries, attraction, anatomyCompatibility, genderExpression, bodyComfort, emergencyCard,
+  relationshipAffection, intimacyBoundaries, attraction, anatomyCompatibility, genderExpression, bodyComfort, emergencyCard, bodyContactMap,
 ];
 
 const { templates, problems } = buildCatalogue(RAW_TEMPLATES);

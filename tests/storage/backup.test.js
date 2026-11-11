@@ -151,7 +151,7 @@ describe('hostile imports are rejected with a readable message (M1-AC-09)', () =
     ['wrong-format', 'a selected-view kind', () => backupWith(null, (e) => { e.kind = 'selected-view'; })],
     ['wrong-format', 'a raw record export', () => serialiseRawRecord({ anything: true }, LATER)],
     ['newer-version', 'a newer backup format version', () => backupWith(null, (e) => { e.formatVersion = 2; })],
-    ['newer-version', 'a newer profile schema version', () => backupWith((p) => { p.schemaVersion = 2; })],
+    ['newer-version', 'a newer profile schema version', () => backupWith((p) => { p.schemaVersion = 99; })],
     ['unknown-fields', 'an extra envelope field', () => backupWith(null, (e) => { e.extra = 1; })],
     ['unknown-fields', 'an extra profile field', () => backupWith((p) => { p.surprise = true; })],
     ['unknown-fields', 'an extra item field', () => backupWith((p) => { p.items[0].surprise = true; })],

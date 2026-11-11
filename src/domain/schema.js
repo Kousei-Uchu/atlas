@@ -115,6 +115,24 @@ export const settingsSchema = z.strictObject({
   maturePhrasing: z.boolean().optional(),
 });
 
+// A snapshot (M7-03, D-063): the answers to state questions at one moment. It holds names as well as ids so
+// history stays readable after an item, group or state is renamed or deleted. It never holds notes, a
+// person's own words, audiences or views.
+export const snapshotEntrySchema = z.strictObject({
+  itemId: id,
+  label: z.string().min(1).max(LIMITS.labelLength),
+  categoryName: z.string().max(LIMITS.categoryNameLength),
+  stateId: id,
+  stateLabel: z.string().min(1).max(LIMITS.stateLabelLength),
+});
+
+export const snapshotSchema = z.strictObject({
+  id,
+  label: z.string().min(1).max(LIMITS.titleLength),
+  takenAt: isoDate,
+  entries: z.array(snapshotEntrySchema).max(LIMITS.items),
+});
+
 export const profileSchema = z.strictObject({
   schemaVersion: z.literal(SCHEMA_VERSION),
   id,
@@ -131,6 +149,7 @@ export const profileSchema = z.strictObject({
   audiences: z.array(audienceSchema).max(LIMITS.audiences),
   overrides: z.array(overrideSchema).max(LIMITS.overrides),
   views: z.array(viewSchema).max(LIMITS.views),
+  snapshots: z.array(snapshotSchema).max(LIMITS.snapshots),
   metadata: z.strictObject({ templateIds: z.array(id).max(100) }),
 });
 

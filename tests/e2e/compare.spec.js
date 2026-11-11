@@ -1,59 +1,52 @@
+// M7-05: comparing two charts on this device, through the production build (D-065).
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, stateButton, HUG } from './fixtures.js';
+import { test, expect, HUG, stateButton } from './fixtures.js';
 
-const row = (page, label) => page.locator('.item-row').filter({ hasText: label }).first();
+const panel = (page) => page.locator('section.panel').filter({ has: page.getByRole('heading', { name: 'Compare charts' }) });
 
-async function setup(page) {
-  await stateButton(page, HUG).click();
-  await page.getByRole('button', { name: /^Open audiences/ }).click();
-  await page.getByLabel('Name of the audience').fill('Friends');
-  await page.getByLabel('Kind of audience').selectOption({ label: 'Friends' });
-  await page.getByRole('button', { name: 'Add audience' }).click();
+// "My profile" ends at No; "My profile (as at Then)" is made from a snapshot taken at Unsure.
+async function twoCharts(page) {
+  await stateButton(page, HUG).click();            // Unsure
+  await page.getByRole('button', { name: 'Open timeline' }).click();
+  await page.getByLabel('Name for this snapshot').fill('Then');
+  await page.getByRole('button', { name: 'Save snapshot' }).click();
+  await stateButton(page, HUG).click();            // No
+  await page.getByRole('button', { name: 'Make a new profile from Then' }).click();
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Make new profile' }).click();
+  await expect(page.getByText('Profile: My profile (as at Then)')).toBeVisible();
 }
 
-test('compare shows only what differs, flags more-open overrides, and changes no answer (M4-07, I-04)', async ({ page }) => {
-  await setup(page);
-  await page.getByRole('button', { name: 'Compare with my answers for Friends' }).click();
-  await expect(page.getByTestId('compare')).toContainText('Friends sees exactly your own answers.');
-
-  const own = await stateButton(page, HUG).innerText();
-  await row(page, HUG).getByRole('button', { name: /^Audiences/ }).click();
-  await row(page, HUG).getByRole('combobox', { name: /Friends.*sees/ }).selectOption({ label: 'Yes' });
-  if (own !== 'Yes') {
-    await expect(page.getByTestId('compare')).toContainText(HUG);
-    await expect(page.getByTestId('compare-counts')).toContainText('1 item differs');
-  }
-  await expect(stateButton(page, HUG)).toHaveText(own);
+test('with one chart, the panel says a second one is needed', async ({ page }) => {
+  await page.getByRole('button', { name: 'Open comparison' }).click();
+  await expect(panel(page)).toContainText('needs a second chart');
 });
 
-test('printing hides the controls and prints a comparison on its own (M4-07)', async ({ page }) => {
-  await setup(page);
-  await row(page, HUG).getByRole('button', { name: /^Audiences/ }).click();
-  await row(page, HUG).getByRole('combobox', { name: /Friends.*sees/ }).selectOption({ label: 'No' });
-  await page.getByRole('button', { name: 'Compare with my answers for Friends' }).click();
-
-  await page.emulateMedia({ media: 'print' });
-  await expect(page.getByRole('button', { name: 'Undo' })).toBeHidden();
-  await expect(page.locator('.app-footer')).toBeHidden();
-  await expect(page.getByText(HUG).first()).toBeVisible(); // the chart still prints, state names are text
-
-  await page.evaluate(() => {
-    const node = document.querySelector('.compare');
-    node.setAttribute('data-print-target', 'true');
-    document.documentElement.setAttribute('data-print', 'compare');
-  });
-  await expect(page.locator('.item-row').first()).toBeHidden();
-  await expect(page.getByTestId('compare')).toBeVisible();
+test('lists the differing answers side by side, and changes neither chart (M7-05)', async ({ page }) => {
+  await twoCharts(page);
+  await page.getByRole('button', { name: 'Open comparison' }).click();
+  await panel(page).locator('label.field select').selectOption({ label: 'My profile' });
+  const table = panel(page).getByRole('table', { name: 'Questions with different answers' });
+  await expect(table).toBeVisible();
+  await expect(table.getByRole('columnheader')).toHaveText(['Question', 'My profile (as at Then)', 'My profile']);
+  const row = table.getByRole('row').nth(1);
+  await expect(row).toContainText('Unsure');
+  await expect(row).toContainText('No');
+  await expect(panel(page)).toContainText('a different answer');
+  await expect(panel(page)).not.toContainText(/score|compatible|match|percent|overall/i);
+  // reading changed nothing: this chart still says Unsure
+  await expect(stateButton(page, HUG)).toHaveText('Unsure');
 });
 
-test('the comparison has no serious accessibility violations in any theme (M4-07)', async ({ page }) => {
-  await setup(page);
-  await row(page, HUG).getByRole('button', { name: /^Audiences/ }).click();
-  await row(page, HUG).getByRole('combobox', { name: /Friends.*sees/ }).selectOption({ label: 'No' });
-  await page.getByRole('button', { name: 'Compare with my answers for Friends' }).click();
-  for (const theme of ['Light', 'Dark', 'High contrast']) {
-    await page.getByRole('combobox', { name: 'Appearance' }).selectOption({ label: theme });
-    const results = await new AxeBuilder({ page }).include('[data-testid="compare"]').analyze();
-    expect(results.violations.filter((v) => ['serious', 'critical'].includes(v.impact)).map((v) => v.id), theme).toEqual([]);
+test('axe finds nothing serious in any theme, and it reflows at 320 px', async ({ page }) => {
+  await twoCharts(page);
+  await page.getByRole('button', { name: 'Open comparison' }).click();
+  await panel(page).locator('label.field select').selectOption({ label: 'My profile' });
+  await expect(panel(page).getByRole('table')).toBeVisible();
+  for (const label of ['Light', 'Dark', 'High contrast']) {
+    await page.getByRole('combobox', { name: 'Appearance' }).selectOption({ label });
+    const v = (await new AxeBuilder({ page }).analyze()).violations.filter((x) => ['serious', 'critical'].includes(x.impact));
+    expect(v.map((x) => `${x.id}: ${x.nodes.map((n) => n.target)}`), label).toEqual([]);
   }
+  await page.setViewportSize({ width: 320, height: 640 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(1);
 });

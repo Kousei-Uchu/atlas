@@ -118,3 +118,20 @@ describe('the export shows exactly what the rule allows, over many random views 
     expect(JSON.stringify(p)).toBe(before);
   });
 });
+
+describe('snapshots never leave in any output (M7-03, D-063)', () => {
+  it('keeps snapshot names and entries out of the model, Markdown and SVG', async () => {
+    const { takeSnapshot } = await import('../../src/domain/snapshot-commands.js');
+    let p = createStarterProfile({ id: 'profile_s', title: 'Mine', now: NOW });
+    const itemId = p.items.find((i) => i.type === 'state').id;
+    p = must(setItemState(p, { itemId, stateId: 'yes' }, NOW));
+    p = must(takeSnapshot(p, { id: 'snapshot_canary', label: 'SNAPSHOTCANARY' }, NOW));
+    p = must(addView(p, { id: 'view_a', name: 'All' }, NOW));
+    p = { ...p, views: [{ ...p.views[0], includedItemIds: [itemId] }] };
+    const built = buildExportModel(p, p.views[0], { generatedAt: NOW });
+    expect(built.ok, built.error).toBe(true);
+    const out = `${JSON.stringify(built.model)}\n${renderMarkdown(built.model)}\n${renderSvg(built.model).svg}`;
+    expect(out).not.toContain('SNAPSHOTCANARY');
+    expect(out).not.toContain('snapshot_canary');
+  });
+});

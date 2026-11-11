@@ -1,8 +1,8 @@
 // Schema migrations (spec 9; I-12, I-14; M6-01). Pure.
 //
 // Each migration is an explicit function from version N to N+1, listed in MIGRATIONS under key N.
-// The schema is at version 1, so the list is empty today. This harness exists so the first change to
-// the schema has a tested, safe path ready before it is needed.
+// Version 1 to 2 (M7-03) adds `snapshots`. It is the first real migration, and the harness below is what
+// keeps it safe.
 //
 // What it guarantees:
 //   - The input is never changed. Steps run on a copy, so the stored record stays as it was until
@@ -13,8 +13,11 @@
 //   - Newer data is never touched here (I-14), and nothing is repaired or dropped.
 import { SCHEMA_VERSION } from './limits.js';
 
-/** Migration N: a profile at version N in, a profile at version N+1 out. Empty while the schema is at 1. */
-export const MIGRATIONS = Object.freeze({});
+/** Migration N: a profile at version N in, a profile at version N+1 out. */
+export const MIGRATIONS = Object.freeze({
+  // 1 -> 2: profiles had no history. They start with none, and nothing else changes.
+  1: (profile) => ({ ...profile, schemaVersion: 2, snapshots: [] }),
+});
 
 /**
  * @param {unknown} raw  A profile record, possibly from an older version.

@@ -7,8 +7,13 @@ const to3 = (p) => ({ ...p, extra: true, schemaVersion: 3 });
 const registry = { 1: to2, 2: to3 };
 
 describe('migrateProfile', () => {
-  it('has no migrations while the schema is at version 1', () => {
-    expect(Object.keys(MIGRATIONS)).toEqual([]);
+  it('has exactly one real migration, 1 to 2, which adds empty history and changes nothing else (M7-03)', () => {
+    expect(Object.keys(MIGRATIONS)).toEqual(['1']);
+    const v1 = { schemaVersion: 1, id: 'p', title: 'Mine', answers: [{ itemId: 'a' }], views: [] };
+    const out = MIGRATIONS[1](v1);
+    expect(out).toEqual({ ...v1, schemaVersion: 2, snapshots: [] });
+    expect(v1.schemaVersion).toBe(1); // the input is not changed
+    expect(v1.snapshots).toBeUndefined();
   });
 
   it('returns a current record as it is, with no steps', () => {

@@ -22,7 +22,7 @@ export const NO_UPLOAD_NOTICE =
 
 /** Shown next to the backup export button, so it is never mistaken for a shared view. */
 export const BACKUP_NOTICE =
-  'A full backup contains everything in this profile, including every note. It is not encrypted. Keep it somewhere only you can open.';
+  'A full backup contains everything in this profile, including every note and every saved snapshot. It is not encrypted. Keep it somewhere only you can open.';
 
 /** Shown when the person is about to import a file. */
 export const IMPORT_NOTICE =
@@ -48,3 +48,10 @@ export const DELETE_ALL_DESCRIPTION =
 /** I-07, spec 11.6: shown wherever a share link is made. Fixed wording. Never say a link is private or secure. */
 export const SHARE_PRIVACY_NOTICE =
   'Anyone who has this link can read everything in it. It is not encrypted. Browser history, messaging apps, screenshots and synced devices may keep copies. Only include what you are comfortable sharing.';
+
+/**
+ * Shown at the top of the timeline (M7-03, D-063). Says what a snapshot keeps, what it leaves out, and that
+ * deleting an item does not remove it from earlier snapshots.
+ */
+export const SNAPSHOT_NOTICE =
+  'A snapshot keeps your answers as they are now, so you can see later what has changed. It keeps answers to the questions only. It does not keep notes or your own words. Deleting an item from the chart does not remove it from a snapshot you already saved, so delete the snapshot too. Snapshots are part of backups. They are never in views, exports or share links.';

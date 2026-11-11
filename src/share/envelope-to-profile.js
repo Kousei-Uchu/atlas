@@ -73,7 +73,7 @@ export function profileFromEnvelope(envelope, { id, now, makeId = newId }) {
     title: cut(`Shared: ${envelope.title}`, LIMITS.titleLength),
     description: cut(`A copy of a chart shared on ${date}. These are another person's answers. A chart shows preferences. It is not permission.${dropped > 0 ? ` ${dropped} of its states could not be kept, so answers that used them are Unanswered.` : ''}`, LIMITS.descriptionLength),
     createdAt: now, updatedAt: now,
-    settings: createDefaultSettings(), states, categories, items, answers, audiences: [], overrides: [], views: [],
+    settings: createDefaultSettings(), states, categories, items, answers, audiences: [], overrides: [], views: [], snapshots: [],
     metadata: { templateIds: [] },
   };
   const checked = validateProfile(profile);

@@ -57,7 +57,7 @@ describe('hostile JSON (I-08, spec 10.2)', () => {
 describe('profile validation errors (I-14)', () => {
   it('rejects a newer schema version with an update message', () => {
     const p = starter();
-    p.schemaVersion = 2;
+    p.schemaVersion = 99;
     const r = validateProfile(p);
     expect(code(r)).toBe('newer-version');
     expect(r.error.message).toMatch(/Update the app/);
