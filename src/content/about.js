@@ -33,7 +33,7 @@ export const ABOUT_SECTIONS = Object.freeze([
     id: 'backups',
     heading: 'Backups and deleting',
     body: [
-      'A full backup holds everything in a profile, including every note and every saved snapshot. It is not encrypted, so keep it somewhere you trust.',
+      'A full backup holds everything in a profile, including every note and every saved snapshot. It is not encrypted, so keep it somewhere you trust, or lock a copy with a password.',
       'A snapshot keeps an earlier copy of your answers (not notes or your own words) in this browser. Deleting an item does not remove it from a snapshot, so delete the snapshot as well.',
       '“Delete all local data” removes every profile, answer, note and snapshot from this browser. It cannot reach backup files, exports or links you have already made.',
     ],

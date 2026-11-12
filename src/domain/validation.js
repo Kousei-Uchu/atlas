@@ -4,10 +4,12 @@ import { LIMITS, SCHEMA_VERSION } from './limits.js';
 import { UNANSWERED_ID } from './defaults.js';
 import { profileSchema } from './schema.js';
 import { migrateProfile } from './migrations.js';
+import { canonicalDate, canonicalNumber } from './item-values.js';
 
 export const ERROR_CODES = Object.freeze([
   'file-too-large', 'not-json', 'forbidden-key', 'too-deep', 'wrong-format',
   'newer-version', 'missing-migration', 'migration-failed', 'unknown-fields', 'schema-invalid', 'integrity-invalid', 'over-limit',
+  'wrong-password', 'password-too-weak', 'crypto-unavailable',
 ]);
 
 const MESSAGES = {
@@ -23,6 +25,9 @@ const MESSAGES = {
   'schema-invalid': 'Some values in this file are missing or not allowed.',
   'integrity-invalid': 'The contents of this file refer to things that do not exist or conflict with each other.',
   'over-limit': 'This file contains more entries than the app allows.',
+  'wrong-password': 'That password did not unlock this file, or the file has been changed.',
+  'password-too-weak': 'That password is not long enough.',
+  'crypto-unavailable': 'This page cannot do encryption here. Open the app from its https address or from localhost, then try again.',
 };
 
 const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
@@ -182,15 +187,32 @@ export function checkIntegrity(p) {
   const stateById = new Map(p.states.map((s) => [s.id, s]));
   for (const i of p.items) {
     if (!categoryIds.has(i.categoryId)) add(`Item ${i.id} refers to a missing category: ${i.categoryId}`);
+    if (i.type === 'choice') {
+      const options = i.options ?? [];
+      if (options.length === 0) add(`Item ${i.id} is a choice item with no options.`);
+      if (new Set(options.map((o) => o.id)).size !== options.length) add(`Item ${i.id} repeats an option id.`);
+      if (new Set(options.map((o) => o.label.toLowerCase())).size !== options.length) add(`Item ${i.id} repeats an option name.`);
+    } else if (i.options !== undefined) add(`Item ${i.id} has options, but is not a choice item.`);
+    if (i.unit !== undefined && i.type !== 'number') add(`Item ${i.id} has a unit, but is not a number item.`);
   }
 
   for (const a of p.answers) {
     const item = itemById.get(a.itemId);
     if (!item) { add(`Answer refers to a missing item: ${a.itemId}`); continue; }
-    const hasContent = a.stateId !== undefined || (a.text ?? '') !== '' || (a.note ?? '') !== '';
+    const hasContent = a.stateId !== undefined || (a.text ?? '') !== '' || (a.choices ?? []).length > 0 || (a.note ?? '') !== '';
     if (!hasContent) add(`Answer for ${a.itemId} is empty. An empty answer means Unanswered and is not stored.`);
-    if (item.type === 'state' && a.text !== undefined) add(`Answer for ${a.itemId} has text, but the item takes a state.`);
-    if (item.type === 'text' && a.stateId !== undefined) add(`Answer for ${a.itemId} has a state, but the item takes text.`);
+    if (item.type === 'state' && (a.text !== undefined || a.choices !== undefined)) add(`Answer for ${a.itemId} has text or choices, but the item takes a state.`);
+    if (item.type !== 'state' && a.stateId !== undefined) add(`Answer for ${a.itemId} has a state, but the item takes ${item.type === 'text' ? 'text' : `a ${item.type}`}.`);
+    if (item.type !== 'choice' && a.choices !== undefined) add(`Answer for ${a.itemId} has choices, but the item is not a choice item.`);
+    if (item.type === 'choice') {
+      if (a.text !== undefined) add(`Answer for ${a.itemId} has text, but the item takes a choice.`);
+      const known = new Set((item.options ?? []).map((o) => o.id));
+      const picked = a.choices ?? [];
+      if (picked.some((id) => !known.has(id))) add(`Answer for ${a.itemId} chooses an option that does not exist.`);
+      if (new Set(picked).size !== picked.length) add(`Answer for ${a.itemId} chooses an option twice.`);
+    }
+    if (item.type === 'number' && a.text !== undefined && canonicalNumber(a.text) !== a.text) add(`Answer for ${a.itemId} is not a number in the kept form.`);
+    if (item.type === 'date' && a.text !== undefined && canonicalDate(a.text) !== a.text) add(`Answer for ${a.itemId} is not a real date written year-month-day.`);
     if (a.stateId !== undefined) {
       const state = stateById.get(a.stateId);
       if (!state) add(`Answer for ${a.itemId} refers to a missing state: ${a.stateId}`);

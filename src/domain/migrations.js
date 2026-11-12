@@ -17,6 +17,9 @@ import { SCHEMA_VERSION } from './limits.js';
 export const MIGRATIONS = Object.freeze({
   // 1 -> 2: profiles had no history. They start with none, and nothing else changes.
   1: (profile) => ({ ...profile, schemaVersion: 2, snapshots: [] }),
+  // 2 -> 3 (M8-05): number, date and choice items are new, and every optional field they use is absent.
+  // Nothing changes except the version, so that an older app refuses these files instead of misreading them (I-14).
+  2: (profile) => ({ ...profile, schemaVersion: 3 }),
 });
 
 /**

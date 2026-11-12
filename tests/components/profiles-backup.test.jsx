@@ -6,6 +6,7 @@ import { screen, waitFor, within } from '@testing-library/react';
 import { freshDb, renderAtlas, seriousViolations, stateButton } from './helpers.jsx';
 import { listProfiles, loadProfile } from '../../src/storage/profile-repository.js';
 import { buildBackup, parseBackupText, RAW_RECORD_FORMAT } from '../../src/storage/backup.js';
+import { MAX_LOCKED_FILE_BYTES } from '../../src/storage/locked-backup.js';
 import { DELETE_ALL_DESCRIPTION, IMPORT_NOTICE, BACKUP_NOTICE } from '../../src/content/notices.js';
 import { LIMITS } from '../../src/domain/limits.js';
 
@@ -153,7 +154,8 @@ describe('hostile imports are refused and change nothing (M1-AC-09)', () => {
   it('refuses an oversized file before reading it', async () => {
     const { user } = await render();
     const big = jsonFile('{}');
-    Object.defineProperty(big, 'size', { value: LIMITS.backupFileBytes + 1 });
+    // A locked file is larger than the backup inside it, so the early limit is the locked-file limit (M8-04).
+    Object.defineProperty(big, 'size', { value: MAX_LOCKED_FILE_BYTES + 1 });
     const readSpy = vi.spyOn(big, 'text');
     const snapshot = await rawSnapshot();
 
@@ -278,5 +280,15 @@ describe('accessibility of the new panels (M1-AC-05)', () => {
   it('has no serious or critical axe violations', async () => {
     const { container } = await render();
     expect(await seriousViolations(container)).toEqual([]);
+  });
+});
+
+describe('a plain file between the two size limits', () => {
+  it('is read, then refused by the ordinary 4 MiB gate, and changes nothing', async () => {
+    const { user } = await render();
+    const text = ' '.repeat(LIMITS.backupFileBytes + 10);
+    await user.upload(fileInput(), jsonFile(text));
+    expect(await screen.findByText(/Nothing was imported/)).toBeTruthy();
+    expect(screen.getByText(/larger than the 4 MiB limit/)).toBeTruthy();
   });
 });

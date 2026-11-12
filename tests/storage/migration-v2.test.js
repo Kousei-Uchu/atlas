@@ -21,7 +21,7 @@ function v1Record(id = 'profile_v1') {
   return { ...rest, schemaVersion: 1, revision: 5 };
 }
 
-it('the app is at schema version 2', () => expect(SCHEMA_VERSION).toBe(2));
+it('the app is at schema version 3 (the version 1 to 2 step is still run, then 2 to 3)', () => expect(SCHEMA_VERSION).toBe(3));
 
 describe('a stored version 1 profile', () => {
   it('opens as version 2 with empty history, and the stored record is not changed by reading', async () => {
@@ -29,7 +29,7 @@ describe('a stored version 1 profile', () => {
     const before = JSON.stringify(await loadRawRecord(db, 'profile_v1'));
     const r = await loadProfile(db, 'profile_v1');
     expect(r.ok).toBe(true);
-    expect(r.profile).toMatchObject({ schemaVersion: 2, title: 'Made last month', revision: 5, snapshots: [] });
+    expect(r.profile).toMatchObject({ schemaVersion: SCHEMA_VERSION, title: 'Made last month', revision: 5, snapshots: [] });
     expect(JSON.stringify(await loadRawRecord(db, 'profile_v1'))).toBe(before);
     expect((await listProfiles(db)).map((p) => p.title)).toEqual(['Made last month']);
   });
@@ -42,8 +42,8 @@ describe('a stored version 1 profile', () => {
     expect(loaded.profile.answers).toEqual(old.answers);
     expect(loaded.profile.settings).toEqual(old.settings);
     const saved = await saveProfile(db, loaded.profile);
-    expect(saved).toMatchObject({ schemaVersion: 2, revision: 6 });
-    expect((await loadRawRecord(db, 'profile_v1')).schemaVersion).toBe(2);
+    expect(saved).toMatchObject({ schemaVersion: SCHEMA_VERSION, revision: 6 });
+    expect((await loadRawRecord(db, 'profile_v1')).schemaVersion).toBe(SCHEMA_VERSION);
   });
 
   it('is refused by a version 1 app once it has been saved as version 2 (the old app sees newer data)', () => {
@@ -61,7 +61,7 @@ describe('a version 1 backup file', () => {
     file.profile.schemaVersion = 1;
     const parsed = parseBackupText(JSON.stringify(file));
     expect(parsed.ok, JSON.stringify(parsed.error)).toBe(true);
-    expect(parsed.profile).toMatchObject({ schemaVersion: 2, snapshots: [] });
+    expect(parsed.profile).toMatchObject({ schemaVersion: SCHEMA_VERSION, snapshots: [] });
   });
 
   it('a version 2 backup keeps its snapshots', () => {

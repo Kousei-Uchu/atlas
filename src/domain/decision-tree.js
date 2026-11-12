@@ -6,6 +6,7 @@
 // Nothing is worked out from the answers: no advice, no ranking, no label (I-10). Unanswered items are not
 // leaves, because Unanswered is the absence of an answer (I-01).
 import { effectiveStateId, getAnswer, getState, sortedByOrder } from './selectors.js';
+import { valueText } from './item-values.js';
 
 export const DECISION_TREE_TEMPLATE = 'overwhelm-plan';
 
@@ -23,8 +24,8 @@ export function decisionTree(profile) {
   const branches = categories.map((category) => {
     const items = sortedByOrder(profile.items.filter((i) => i.categoryId === category.id));
     const texts = items
-      .filter((i) => i.type === 'text')
-      .map((item) => ({ item, text: (getAnswer(profile, item.id)?.text ?? '').trim() }))
+      .filter((i) => i.type !== 'state')
+      .map((item) => ({ item, text: valueText(item, getAnswer(profile, item.id)).trim() }))
       .filter((row) => row.text !== '');
     const byState = new Map();
     for (const item of items.filter((i) => i.type === 'state')) {

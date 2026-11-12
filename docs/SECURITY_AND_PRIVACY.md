@@ -37,7 +37,7 @@ A profile can hold snapshots, earlier copies of its state answers (D-063, schema
 ## Known limits
 
 - Browser storage is not a backup and other users of the same browser profile may read it. The app says so on screen.
-- Backups are not encrypted (D-020; password protection is M8).
+- Backups are not encrypted unless the person chooses "Download a locked backup" (M8-04, D-071). A locked backup is AES-256-GCM with a PBKDF2-SHA256 key from the person's password, made on the device. It is only as strong as the password, cannot be recovered if the password is lost, and still shows that a backup exists. Exports (Markdown, CSV, web page, PDF, pictures) and share links remain unencrypted.
 - A share link is a bearer copy. Anyone who has it can read it, it is not encrypted, and browser history, messaging apps, screenshots and synced devices may keep copies. The app says this before a link is made (I-07). A link cannot be recalled.
 - If browser storage cannot be opened at all, the app shows a message and does not run an in-memory editor. A share link can still be opened and read.
 - A compromised build or hosting account could ship different code. CSP limits what shipped code can do but cannot stop a malicious deploy. Review dependency changes and Vercel access accordingly.

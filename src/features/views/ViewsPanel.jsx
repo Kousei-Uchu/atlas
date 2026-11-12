@@ -117,6 +117,7 @@ function Review({ profile, view, evaluation, run, announce }) {
               <strong>{e.label}</strong>:{' '}
               {e.value.kind === 'state' ? stateLabel(e.value.stateId) : (e.value.text.trim() === '' ? 'nothing written' : 'the text you wrote')}
               {e.value.kind === 'state' && e.value.source === 'override' && <span className="hint"> (audience override{e.value.moreOpenThanDefault ? ', shows more than your own answer' : ''})</span>}
+              {e.value.kind === 'state' && e.value.source === 'inherited' && <span className="hint"> (inherited from a parent audience)</span>}
               {e.note !== null && <span className="hint"> (with its note)</span>}
               {e.sensitivity === 'restricted' && restrictedBox(e)}
             </li>

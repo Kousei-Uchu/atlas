@@ -124,6 +124,9 @@ Every invariant has an enforcing test. A change that breaks one is a bug, not a 
 | D-068 | CSV export renders the export model only, quotes every cell, starts with a byte-order mark, repeats the consent statement, and defuses spreadsheet formulas with a leading apostrophe. See `docs/decisions/0028-csv-export.md`. |
 | D-069 | PDF is the browser's own print of a page laid out from the export model: no PDF library, nothing leaves the device, and the page holds only what the view includes. See `docs/decisions/0029-pdf-by-print.md`. |
 | D-070 | The standalone web page export renders the export model only, with no script, image, link or address, its own policy forbidding them, and everything escaped. See `docs/decisions/0030-standalone-html-export.md`. |
+| D-071 | A full backup can be locked with a password: PBKDF2-SHA256 (600,000 rounds) and AES-256-GCM through Web Crypto, on the device, with an authenticated header, a strictly validated untrusted header, one answer for wrong password and tampering, and plain copy about the limits. Views, exports and share links stay unencrypted. See `docs/decisions/0031-locked-backup.md`. |
+| D-072 | Number, date and choice items are new item types, stored as one written form in `text` (and `choices` for a choice) so views and every export carry them as plain words. Schema version 3. State-only features do not read them; pronoun sets stay grouped; reference items are deferred. See `docs/decisions/0032-further-item-types.md`. |
+| D-073 | Parent-audience inheritance: with no direct override, an audience inherits the nearest parent audience's enabled override, but only when it is no more open than your own answer. Inheritance narrows, never widens; a direct override always wins and may be more open. Disagreeing parent overrides inherit as Unanswered and say so. Conditional rules (time, context) are not built: they need inputs the app deliberately does not hold, see `docs/decisions/0033-audience-inheritance.md`. |
 
 ### 3.2 Open
 
@@ -284,7 +287,7 @@ State invariants: IDs unique; exactly one state with `isUnanswered: true` and id
 
 ### 5.6 Audience, override, view (schemas in M1, behaviour in M4)
 
-- **Audience:** `id`, `name`, `type` (`everyone`, `public`, `acquaintances`, `friends`, `close-friends`, `partner`, `family`, `school-work`, `supervisor`, `professional`, `group`, `individual`), `description`, `parentId` (reserved; unused until inheritance is added).
+- **Audience:** `id`, `name`, `type` (`everyone`, `public`, `acquaintances`, `friends`, `close-friends`, `partner`, `family`, `school-work`, `supervisor`, `professional`, `group`, `individual`), `description`, `parentId` (used for inheritance (D-073)).
 - **Override:** `id`, `itemId`, `audienceId`, `stateId`, `enabled`, `explanation`. No priority. Two enabled overrides for the same item and audience are a conflict.
 - **View:** `id`, `name`, `audienceId` or null, `includedItemIds`, `includeSensitive`, `restrictedOptInItemIds`, `includeNotes`, `visualization {type, options}`.
 
@@ -790,9 +793,9 @@ Further item types (multi-select, number, date, reference, structured pronoun se
 - [x] M8-01 CSV export (decision D-068)
 - [x] M8-02 PDF through the print stylesheet (O-007; decision D-069)
 - [x] M8-03 Standalone HTML export (decision D-070)
-- [ ] M8-04 Password-protected export (D-020; needs a threat note first)
-- [ ] M8-05 Further item types (multi-select, number, date, reference, structured pronoun sets, O-006)
-- [ ] M8-06 Conditional rules and audience inheritance (O-009)
+- [x] M8-04 Password-protected export (D-020, D-071; threat note in `docs/decisions/0031-locked-backup.md`)
+- [x] M8-05 Further item types: number, date and multi-choice built (decision D-072); structured pronoun sets kept as grouped items (O-006 closed); reference items deferred, see `docs/decisions/0032-further-item-types.md`
+- [x] M8-06 Audience inheritance built (decision D-073); conditional rules deliberately deferred, see `docs/decisions/0033-audience-inheritance.md`
 - [ ] M8-07 Community templates with an abuse and privacy review
 - [ ] M8-08 Encrypted sync, only after a separate threat model
 
@@ -827,10 +830,10 @@ Further item types (multi-select, number, date, reference, structured pronoun se
 | O-003 | Maximum decompressed share size: confirm 2 MiB | M5 | 2 MiB |
 | O-004 | How much rich text in notes? | M2 | Plain text only |
 | O-005 | Template update behaviour when a user has edited an item | M3 | Resolved by D-038: update keeps user edits; reset restores the template's wording after showing what differs |
-| O-006 | Structured pronoun-set item type, or grouped items | M8 | Grouped items |
+| O-006 | Structured pronoun-set item type, or grouped items | M8 | Grouped items (closed in D-072) |
 | O-007 | PDF approach that stays fully local | M8 | Print stylesheet (decided in D-069: the browser's own print, no library) |
 | O-008 | Glossary of terminology: include or not, and who maintains it | M8 | Not included |
-| O-009 | Final precedence rules for overlapping audience and contextual rules | M8 | Direct overrides only |
+| O-009 | Final precedence rules for overlapping audience and contextual rules | M8 | Direct, then nearest parent (narrowing only), then own answer (D-073). Contextual rules still open |
 | O-010 | Whether the adult-intended note should require a deliberate acknowledgement | M3 | Informational note |
 | O-011 | Body contact map: keep it restricted, hidden and adult-intended as the spec table says, or make it visible and personal since it covers non-private regions and platonic groups? | M7 | Spec table (restricted, hidden, adult-intended) |
 
@@ -900,3 +903,6 @@ Further item types (multi-select, number, date, reference, structured pronoun se
 | 2026-11-11 | M8-01 done: CSV export. `export/csv.js`, a "Download CSV spreadsheet" button, leak test extended to the CSV, formula-injection defence, unit and e2e tests. |
 | 2026-11-11 | M8-02 done: PDF through print. `PrintSheet`, a "Print or save as PDF" button, print styles that show only the page, and e2e tests including a real Chromium PDF of the layout. |
 | 2026-11-11 | M8-03 done: standalone web page export. `export/html.js`, a "Download web page (HTML)" button, leak and escaping tests, and an e2e test that opens the saved file and checks it makes no request. |
+| 2026-11-12 | M8-04 done: locked backup. `storage/locked-backup.js`, lock and unlock in the Backup panel, threat note, notice and About wording updated, security and limitations docs updated, unit and e2e tests. |
+| 2026-11-12 | M8-05 done: number, date and choice items. `domain/item-values.js`, commands, validation, schema version 3 with a version-only migration, editor controls and an add form, unit and e2e tests. |
+| 2026-11-13 | M8-06 done: parent-audience inheritance in `domain/audience-resolution.js` (`inherited` source, `heldBack`, `ancestorsOf`), plain-words explanations, views note, unit and e2e tests, decision D-073. Conditional rules deferred. |

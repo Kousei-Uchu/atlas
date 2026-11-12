@@ -1,7 +1,8 @@
 // Single source of truth for size and count limits (spec 5.8).
 
-// Version 2 adds `snapshots` (M7-03, D-063). Version 1 profiles are migrated on a copy (src/domain/migrations.js).
-export const SCHEMA_VERSION = 2;
+// Version 2 adds `snapshots` (M7-03, D-063). Version 3 allows number, date and choice items (M8-05, D-072).
+// Older profiles are migrated on a copy (src/domain/migrations.js).
+export const SCHEMA_VERSION = 3;
 export const BACKUP_FORMAT_VERSION = 1;
 
 export const LIMITS = Object.freeze({
@@ -24,6 +25,10 @@ export const LIMITS = Object.freeze({
   descriptionLength: 500,
   noteLength: 4000,
   textLength: 4000,
+  // Choice items (M8-05): a short list of the person's own options.
+  optionsPerItem: 12,
+  optionLabelLength: 40,
+  unitLength: 20,
   titleLength: 120,
   tagsPerItem: 10,
   tagLength: 40,

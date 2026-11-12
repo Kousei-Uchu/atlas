@@ -4,7 +4,7 @@ Plain list for people trying the beta. The security-side list is in `SECURITY_AN
 
 **Your data**
 - Charts live only in this browser on this device. Clearing browser data, private browsing, or another device means they are gone. There is no sync and no account. Export a backup regularly.
-- Backups and exports are not encrypted. Password-protected export is planned (M8).
+- Exports and share links are not encrypted. A full backup can be locked with a password (M8-04); a forgotten password cannot be recovered, and a weak password can be guessed offline by anyone who has the file.
 - Anyone who can use this browser profile can read the charts.
 
 - Snapshots (an earlier copy of your answers, not notes or your own words) stay in a profile and in its backups until you delete them. Deleting an item does not remove it from a snapshot.
@@ -25,3 +25,4 @@ Plain list for people trying the beta. The security-side list is in `SECURITY_AN
 **Testing so far**
 - Automated accessibility, keyboard, reflow, reduced-motion and forced-colours checks pass in Chromium. Real screen readers, Firefox, Safari and real phones have not been run by the builder (see M6-03).
 - Not built yet: rich visualisations (M7), PDF and CSV export, community templates, sync (M8).
+- Number, date and choice items (M8-05) appear in views and exports as plain words. They are left out of audience overrides, snapshots, comparison, the maps and the radial diagram, which only read state items.

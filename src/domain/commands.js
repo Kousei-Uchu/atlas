@@ -5,6 +5,7 @@ import { LIMITS } from './limits.js';
 import { effectiveStateId, getAnswer, descendantCategoryIds } from './selectors.js';
 import { getNextState, directionForAction } from './state-cycle.js';
 import { isValidId } from './ids.js';
+import { MAX_DECIMALS, canonicalDate, canonicalNumber } from './item-values.js';
 
 const ok = (profile, extra = {}) => ({ ok: true, profile, ...extra });
 const fail = (error) => ({ ok: false, error });
@@ -25,8 +26,9 @@ function withAnswer(profile, itemId, patch) {
   const next = { itemId, noteShareable: Boolean(merged.note) && merged.noteShareable === true };
   if (merged.stateId) next.stateId = merged.stateId;
   if (merged.text) next.text = merged.text;
+  if (merged.choices && merged.choices.length > 0) next.choices = merged.choices;
   if (merged.note) next.note = merged.note;
-  const hasContent = Boolean(next.stateId || next.text || next.note);
+  const hasContent = Boolean(next.stateId || next.text || next.choices || next.note);
   let answers;
   if (!hasContent) answers = profile.answers.filter((a) => a.itemId !== itemId);
   else if (existing) answers = profile.answers.map((a) => (a.itemId === itemId ? next : a));
@@ -37,7 +39,7 @@ function withAnswer(profile, itemId, patch) {
 function findItem(profile, itemId, type) {
   const item = profile.items.find((i) => i.id === itemId);
   if (!item) return { error: 'That item no longer exists.' };
-  if (type && item.type !== type) return { error: `That item does not take ${type === 'state' ? 'a state' : 'text'}.` };
+  if (type && item.type !== type) return { error: `That item does not take ${{ state: 'a state', text: 'text', number: 'a number', date: 'a date', choice: 'a choice' }[type]}.` };
   return { item };
 }
 
@@ -77,6 +79,80 @@ export function setItemText(profile, { itemId, text }, now) {
   if (typeof text !== 'string' || text.length > LIMITS.textLength) return fail(`Text must be ${LIMITS.textLength} characters or fewer.`);
   if ((getAnswer(profile, itemId)?.text ?? '') === text) return ok(profile);
   return ok(touch(withAnswer(profile, itemId, { text }), now));
+}
+
+/** Set a number answer. Empty text clears it (Unanswered). Anything else must be a number in the one kept form. */
+export function setItemNumber(profile, { itemId, text }, now) {
+  const { error } = findItem(profile, itemId, 'number');
+  if (error) return fail(error);
+  if (typeof text !== 'string') return fail('A number is needed.');
+  const value = text.trim() === '' ? '' : canonicalNumber(text);
+  if (value === null) return fail(`Use digits, with up to ${MAX_DECIMALS} after a point, and no larger than a million million.`);
+  if ((getAnswer(profile, itemId)?.text ?? '') === value) return ok(profile);
+  return ok(touch(withAnswer(profile, itemId, { text: value }), now));
+}
+
+/** Set a date answer as YYYY-MM-DD. Empty text clears it (Unanswered). */
+export function setItemDate(profile, { itemId, text }, now) {
+  const { error } = findItem(profile, itemId, 'date');
+  if (error) return fail(error);
+  if (typeof text !== 'string') return fail('A date is needed.');
+  const value = text.trim() === '' ? '' : canonicalDate(text);
+  if (value === null) return fail('Use a real date written as year-month-day.');
+  if ((getAnswer(profile, itemId)?.text ?? '') === value) return ok(profile);
+  return ok(touch(withAnswer(profile, itemId, { text: value }), now));
+}
+
+/** Set the chosen options of a choice item. An empty list clears it (Unanswered). Order carries no meaning. */
+export function setItemChoices(profile, { itemId, choiceIds }, now) {
+  const { error, item } = findItem(profile, itemId, 'choice');
+  if (error) return fail(error);
+  if (!Array.isArray(choiceIds)) return fail('A list of options is needed.');
+  const known = new Set((item.options ?? []).map((o) => o.id));
+  if (choiceIds.some((id) => !known.has(id))) return fail('One of those options no longer exists.');
+  const wanted = new Set(choiceIds);
+  const ordered = (item.options ?? []).filter((o) => wanted.has(o.id)).map((o) => o.id);
+  const current = getAnswer(profile, itemId)?.choices ?? [];
+  if (current.length === ordered.length && current.every((id, i) => id === ordered[i])) return ok(profile);
+  return ok(touch(withAnswer(profile, itemId, { choices: ordered }), now));
+}
+
+/**
+ * Replace the options of a choice item. Commands are pure, so the caller supplies the ids; `planOptions` in
+ * item-values.js keeps the id of every option whose label is unchanged. An option left out is removed from the
+ * answer, and the rest of the answer stays.
+ * @param {{ itemId: string, options: Array<{ id: string, label: string }> }} args
+ */
+export function setItemOptions(profile, { itemId, options }, now) {
+  const { error, item } = findItem(profile, itemId, 'choice');
+  if (error) return fail(error);
+  const checked = checkOptions(options);
+  if (checked.error) return fail(checked.error);
+  if (JSON.stringify(checked.options) === JSON.stringify(item.options ?? [])) return ok(profile);
+  const kept = new Set(checked.options.map((o) => o.id));
+  const answer = getAnswer(profile, itemId);
+  let next = { ...profile, items: profile.items.map((i) => (i.id === itemId ? { ...i, options: checked.options } : i)) };
+  if (answer?.choices) next = withAnswer(next, itemId, { choices: answer.choices.filter((id) => kept.has(id)) });
+  return ok(touch(next, now));
+}
+
+function checkOptions(options) {
+  if (!Array.isArray(options) || options.length === 0) return { error: 'A choice item needs at least one option.' };
+  if (options.length > LIMITS.optionsPerItem) return { error: `A choice item can have up to ${LIMITS.optionsPerItem} options.` };
+  const labels = new Set();
+  const ids = new Set();
+  const list = [];
+  for (const o of options) {
+    const label = typeof o?.label === 'string' ? o.label.replace(/\s+/g, ' ').trim() : '';
+    if (label === '') return { error: 'An option cannot be empty.' };
+    if (label.length > LIMITS.optionLabelLength) return { error: `An option can be up to ${LIMITS.optionLabelLength} characters.` };
+    if (!isValidId(o.id) || ids.has(o.id)) return { error: 'An option id is not available.' };
+    if (labels.has(label.toLowerCase())) return { error: 'Two options cannot have the same name.' };
+    labels.add(label.toLowerCase());
+    ids.add(o.id);
+    list.push({ id: o.id, label });
+  }
+  return { options: list };
 }
 
 export function setItemNote(profile, { itemId, note }, now) {
@@ -142,9 +218,18 @@ export function deleteCategory(profile, { id }, now) {
 
 // ---- items ----
 
-export function addItem(profile, { id, categoryId, label, type = 'state', sensitivity = 'normal' }, now) {
+export function addItem(profile, { id, categoryId, label, type = 'state', sensitivity = 'normal', options, unit }, now) {
   if (!isValidId(id) || profile.items.some((i) => i.id === id)) return fail('That item id is not available.');
-  if (type !== 'state' && type !== 'text') return fail('Unknown item type.');
+  if (!['state', 'text', 'number', 'date', 'choice'].includes(type)) return fail('Unknown item type.');
+  let optionList;
+  if (type === 'choice') {
+    const checked = checkOptions(options);
+    if (checked.error) return fail(checked.error);
+    optionList = checked.options;
+  } else if (options !== undefined) return fail('Only a choice item has options.');
+  const cleanUnit = typeof unit === 'string' ? unit.replace(/\s+/g, ' ').trim() : '';
+  if (cleanUnit !== '' && type !== 'number') return fail('Only a number item has a unit.');
+  if (cleanUnit.length > LIMITS.unitLength) return fail(`A unit can be up to ${LIMITS.unitLength} characters.`);
   const cleaned = cleanText(label, LIMITS.labelLength, 'Item name');
   if (cleaned.error) return fail(cleaned.error);
   if (!profile.categories.some((c) => c.id === categoryId)) return fail('That category no longer exists.');
@@ -153,6 +238,8 @@ export function addItem(profile, { id, categoryId, label, type = 'state', sensit
     id, categoryId, type, label: cleaned.text, description: '',
     sortOrder: maxOrder(profile.items.filter((i) => i.categoryId === categoryId)) + 10,
     sensitivity, tags: [], origin: null,
+    ...(optionList ? { options: optionList } : {}),
+    ...(cleanUnit !== '' ? { unit: cleanUnit } : {}),
   };
   return ok(touch({ ...profile, items: [...profile.items, item] }, now));
 }

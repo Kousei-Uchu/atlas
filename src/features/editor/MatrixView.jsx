@@ -11,13 +11,14 @@ import { LIMITS } from '../../domain/limits.js';
 import { newId } from '../../domain/ids.js';
 import {
   addCategory, addItem, deleteCategory, deleteItem, renameCategory, renameItem,
-  setItemNote, setItemState, setItemText, setNoteShareable, stepItemState,
+  setItemChoices, setItemDate, setItemNote, setItemNumber, setItemOptions, setItemState, setItemText, setNoteShareable, stepItemState,
 } from '../../domain/commands.js';
 import { moveCategory, moveItem } from '../../domain/order-commands.js';
 import { categoryChoices, filterTree } from '../../domain/search.js';
 import { descendantCategoryIds, effectiveStateId, getAnswer, getCategoryTree, getState } from '../../domain/selectors.js';
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
 import { InlineRename } from './InlineRename.jsx';
+import { AddValueItemForm } from './AddValueItemForm.jsx';
 import { ItemRow } from './ItemRow.jsx';
 import { ItemAudiences } from '../audiences/ItemAudiences.jsx';
 import { BulkBar } from './BulkBar.jsx';
@@ -88,6 +89,16 @@ export function MatrixView({ profile, run, announce }) {
   };
 
   const onSetText = (itemId, text) => { run(setItemText, { itemId, text }, { group: `text:${itemId}` }); };
+  // Number, date and choice answers (M8-05). Returns the result so the control can show an error beside itself.
+  const onSetValue = (itemId, kind, value) => {
+    const label = itemLabelFor(itemId);
+    const result = kind === 'number' ? run(setItemNumber, { itemId, text: value })
+      : kind === 'date' ? run(setItemDate, { itemId, text: value })
+        : kind === 'choices' ? run(setItemChoices, { itemId, choiceIds: value })
+          : run(setItemOptions, { itemId, options: value });
+    if (result.ok) announce(kind === 'options' ? `${label}: options saved` : `${label}: answer saved`);
+    return result;
+  };
   const onSetNote = (itemId, note) => { run(setItemNote, { itemId, note }, { group: `note:${itemId}` }); };
   const onSetShareable = (itemId, shareable) => { run(setNoteShareable, { itemId, shareable }); };
   const onRenameItem = (id, label) => { run(renameItem, { id, label }); };
@@ -116,6 +127,11 @@ export function MatrixView({ profile, run, announce }) {
 
   const addCategoryNamed = (name) => run(addCategory, { id: newId('category'), name }).ok;
   const addItemNamed = (categoryId, label) => run(addItem, { id: newId('item'), categoryId, label }).ok;
+  const addValueItem = (categoryId, args) => {
+    const result = run(addItem, { id: newId('item'), categoryId, ...args });
+    if (result.ok) announce(`${args.label} added`);
+    return result.ok;
+  };
 
   /** Wording for the delete dialog, stating exactly what goes. */
   const describePending = () => {
@@ -188,6 +204,7 @@ export function MatrixView({ profile, run, announce }) {
                 onAction={onAction}
                 onSetState={onSetState}
                 onSetText={onSetText}
+                onSetValue={onSetValue}
                 onSetNote={onSetNote}
                 onSetShareable={onSetShareable}
                 onRename={onRenameItem}
@@ -212,6 +229,7 @@ export function MatrixView({ profile, run, announce }) {
             onAdd={(label) => addItemNamed(category.id, label)}
           />
         )}
+        {!searching && <AddValueItemForm categoryName={category.name} onAdd={(args) => addValueItem(category.id, args)} />}
         {children.map((child, childIndex) => renderCategory(child, depth + 1, children, childIndex))}
       </section>
     );

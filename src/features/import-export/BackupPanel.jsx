@@ -6,10 +6,13 @@
 // person confirms. A failed import changes nothing.
 import { useId, useRef, useState } from 'react';
 import {
-  backupFilename, checkBackupFileSize, parseBackupText, previewBackup, serialiseBackup,
+  backupFilename, parseBackupText, previewBackup, serialiseBackup,
 } from '../../storage/backup.js';
 import { failure } from '../../domain/validation.js';
-import { BACKUP_NOTICE, IMPORT_NOTICE } from '../../content/notices.js';
+import { BACKUP_NOTICE, IMPORT_NOTICE, LOCKED_NOTICE } from '../../content/notices.js';
+import {
+  MAX_LOCKED_FILE_BYTES, MAX_PASSWORD_LENGTH, MIN_PASSWORD_LENGTH, canLock, checkPassword, lockBackup, looksLocked, unlockBackup,
+} from '../../storage/locked-backup.js';
 
 /**
  * @param {{
@@ -27,6 +30,12 @@ export function BackupPanel({ profile, existingIds, now, saveFile, onImport, ann
   const [error, setError] = useState(null); // { message, problems }
   const [pending, setPending] = useState(null); // { profile, preview }
   const [busy, setBusy] = useState(false);
+  const [lockPassword, setLockPassword] = useState('');
+  const [lockAgain, setLockAgain] = useState('');
+  const [lockMessage, setLockMessage] = useState('');
+  const [locked, setLocked] = useState(null); // { text } while a locked file waits for its password
+  const [unlockPassword, setUnlockPassword] = useState('');
+  const cryptoReady = canLock();
 
   const exportBackup = () => {
     if (!profile) return;
@@ -35,14 +44,57 @@ export function BackupPanel({ profile, existingIds, now, saveFile, onImport, ann
     announce('Backup downloaded');
   };
 
+  const exportLocked = async () => {
+    if (!profile || busy) return;
+    setLockMessage('');
+    const checked = checkPassword(lockPassword);
+    if (!checked.ok) return setLockMessage(checked.message);
+    if (lockPassword !== lockAgain) return setLockMessage('The two passwords are not the same.');
+    setBusy(true);
+    try {
+      const stamp = now();
+      const result = await lockBackup(serialiseBackup(profile, stamp), lockPassword);
+      if (!result.ok) return setLockMessage(result.error.message);
+      saveFile(backupFilename(profile, stamp).replace(/\.json$/, '-locked.json'), result.text);
+      setLockPassword('');
+      setLockAgain('');
+      announce('Locked backup downloaded. Keep the password: it cannot be recovered.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const unlock = async () => {
+    if (!locked || busy) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const opened = await unlockBackup(locked.text, unlockPassword);
+      if (!opened.ok) return showFailure(opened, opened.error.code === 'wrong-password');
+      const parsed = parseBackupText(opened.text);
+      if (!parsed.ok) return showFailure(parsed);
+      setLocked(null);
+      setUnlockPassword('');
+      setPending({
+        profile: parsed.profile,
+        preview: previewBackup(parsed.profile, { exportedAt: parsed.exportedAt, existingIds }),
+      });
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const reset = () => {
     setPending(null);
     setError(null);
+    setLocked(null);
+    setUnlockPassword('');
     if (fileRef.current) fileRef.current.value = '';
   };
 
-  const showFailure = (result) => {
+  const showFailure = (result, keepLocked = false) => {
     setPending(null);
+    if (!keepLocked) { setLocked(null); setUnlockPassword(''); }
     setError({ message: result.error.message, problems: result.error.problems });
   };
 
@@ -50,10 +102,12 @@ export function BackupPanel({ profile, existingIds, now, saveFile, onImport, ann
     const file = event.target.files?.[0];
     setPending(null);
     setError(null);
+    setLocked(null);
+    setUnlockPassword('');
     if (!file) return;
 
-    // Size is checked before the file is read (spec 10.2 step 1).
-    const size = checkBackupFileSize(file.size);
+    // Size is checked before the file is read (spec 10.2 step 1). A locked file is larger than the backup inside it.
+    const size = file.size > MAX_LOCKED_FILE_BYTES ? failure('file-too-large') : { ok: true };
     if (!size.ok) return showFailure(size);
 
     let text;
@@ -61,6 +115,11 @@ export function BackupPanel({ profile, existingIds, now, saveFile, onImport, ann
       text = await file.text();
     } catch {
       return showFailure(failure('not-json'));
+    }
+    if (looksLocked(text)) {
+      setLocked({ text });
+      announce('This backup is locked. Type its password to open it.');
+      return;
     }
     const parsed = parseBackupText(text);
     if (!parsed.ok) return showFailure(parsed);
@@ -99,10 +158,47 @@ export function BackupPanel({ profile, existingIds, now, saveFile, onImport, ann
       </div>
 
       <div className="panel-block">
+        <h3>Download a locked backup</h3>
+        <p className="hint">{LOCKED_NOTICE}</p>
+        {!cryptoReady ? (
+          <p className="hint">This page cannot do encryption here. Open the app from its https address or from localhost to lock a backup.</p>
+        ) : (
+          <>
+            <label className="field">
+              <span>Password (at least {MIN_PASSWORD_LENGTH} characters; a few words in a row works well)</span>
+              <input type="password" autoComplete="new-password" maxLength={MAX_PASSWORD_LENGTH} value={lockPassword} onChange={(event) => setLockPassword(event.target.value)} />
+            </label>
+            <label className="field">
+              <span>Type the password again</span>
+              <input type="password" autoComplete="new-password" maxLength={MAX_PASSWORD_LENGTH} value={lockAgain} onChange={(event) => setLockAgain(event.target.value)} />
+            </label>
+            {lockMessage && <p role="alert" className="hint">{lockMessage}</p>}
+            <div>
+              <button type="button" onClick={exportLocked} disabled={!profile || busy}>Download locked backup</button>
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="panel-block">
         <h3>Import a backup</h3>
         <p className="hint">{IMPORT_NOTICE}</p>
         <label htmlFor={inputId} className="file-label">Choose a backup file (.json)</label>
         <input id={inputId} ref={fileRef} type="file" accept=".json,application/json" onChange={onFile} />
+
+        {locked && (
+          <div className="preview" role="region" aria-label="Locked backup">
+            <h4>This backup is locked</h4>
+            <label className="field">
+              <span>Password for this backup</span>
+              <input type="password" autoComplete="current-password" maxLength={MAX_PASSWORD_LENGTH * 4} value={unlockPassword} onChange={(event) => setUnlockPassword(event.target.value)} />
+            </label>
+            <div className="panel-actions">
+              <button type="button" onClick={unlock} disabled={busy || unlockPassword === ''}>Unlock backup</button>
+              <button type="button" onClick={reset} disabled={busy}>Cancel</button>
+            </div>
+          </div>
+        )}
 
         {error && (
           <div className="banner" role="alert" data-tone="error">

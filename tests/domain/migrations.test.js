@@ -7,8 +7,11 @@ const to3 = (p) => ({ ...p, extra: true, schemaVersion: 3 });
 const registry = { 1: to2, 2: to3 };
 
 describe('migrateProfile', () => {
-  it('has exactly one real migration, 1 to 2, which adds empty history and changes nothing else (M7-03)', () => {
-    expect(Object.keys(MIGRATIONS)).toEqual(['1']);
+  it('has two real migrations: 1 to 2 adds empty history (M7-03), 2 to 3 changes only the version (M8-05)', () => {
+    expect(Object.keys(MIGRATIONS)).toEqual(['1', '2']);
+    const v2 = { schemaVersion: 2, id: 'p', title: 'Mine', snapshots: [] };
+    expect(MIGRATIONS[2](v2)).toEqual({ ...v2, schemaVersion: 3 });
+    expect(v2.schemaVersion).toBe(2);
     const v1 = { schemaVersion: 1, id: 'p', title: 'Mine', answers: [{ itemId: 'a' }], views: [] };
     const out = MIGRATIONS[1](v1);
     expect(out).toEqual({ ...v1, schemaVersion: 2, snapshots: [] });

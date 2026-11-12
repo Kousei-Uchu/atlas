@@ -6,6 +6,8 @@ import { getAnswer, effectiveStateId, getState, selectableStates } from '../../d
 import { StatePicker } from '../../components/StatePicker.jsx';
 import { StateCell } from './StateCell.jsx';
 import { InlineRename } from './InlineRename.jsx';
+import { ValueControls } from './ValueControls.jsx';
+import { VALUE_TYPES } from '../../domain/item-values.js';
 
 /**
  * @param {{
@@ -14,6 +16,7 @@ import { InlineRename } from './InlineRename.jsx';
  *   onAction: (itemId: string, kind: 'primary'|'secondary') => void,
  *   onSetState: (itemId: string, stateId: string) => void,
  *   onSetText: (itemId: string, text: string) => void,
+ *   onSetValue?: (itemId: string, kind: 'number'|'date'|'choices'|'options', value: unknown) => { ok: boolean, error?: string },
  *   onSetNote: (itemId: string, note: string) => void,
  *   onSetShareable: (itemId: string, shareable: boolean) => void,
  *   onRename: (itemId: string, label: string) => void,
@@ -23,7 +26,7 @@ import { InlineRename } from './InlineRename.jsx';
  *   renderAudiences?: ((item: object) => import('react').ReactNode) | null,  // what each audience sees; only for items that take a state
  * }} props
  */
-export function ItemRow({ profile, item, onAction, onSetState, onSetText, onSetNote, onSetShareable, onRename, onDelete, order = null, selection = null, renderAudiences = null }) {
+export function ItemRow({ profile, item, onAction, onSetState, onSetText, onSetValue, onSetNote, onSetShareable, onRename, onDelete, order = null, selection = null, renderAudiences = null }) {
   const [noteOpen, setNoteOpen] = useState(false);
   const [audiencesOpen, setAudiencesOpen] = useState(false);
   const audiencesId = useId();
@@ -61,6 +64,8 @@ export function ItemRow({ profile, item, onAction, onSetState, onSetText, onSetN
               onChange={(stateId) => onSetState(item.id, stateId)}
             />
           </div>
+        ) : VALUE_TYPES.includes(item.type) ? (
+          <ValueControls item={item} answer={answer} onSetValue={onSetValue} />
         ) : (
           <div className="item-controls">
             <label htmlFor={textId} className="visually-hidden">Answer for {item.label}</label>

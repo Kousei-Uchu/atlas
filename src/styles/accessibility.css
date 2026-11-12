@@ -137,3 +137,12 @@ input:not([type='checkbox']):not([type='radio']), select, textarea { min-width: 
 .rd-list, .ov-rows, .ov-summary { padding-left: var(--space-4); }
 .rd-list li, .ov-rows li, .ov-summary li { overflow-wrap: anywhere; padding: 0.15rem 0; }
 .ov-pair { display: inline-flex; flex-wrap: wrap; gap: var(--space-2); }
+
+/* Number, date and choice items (M8-05) */
+.value-controls input[type='text'], .value-controls input[type='date'] { min-height: var(--target); max-width: 100%; }
+.choice-group { border: 0; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); min-width: 0; }
+.choice-option { display: inline-flex; align-items: center; gap: var(--space-2); }
+.choice-editor { display: grid; gap: var(--space-2); width: 100%; }
+.choice-editor textarea, .add-value-form textarea { width: 100%; max-width: 100%; }
+.add-value { margin: var(--space-2) 0; }
+.add-value-form { display: grid; gap: var(--space-2); }

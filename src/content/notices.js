@@ -22,7 +22,11 @@ export const NO_UPLOAD_NOTICE =
 
 /** Shown next to the backup export button, so it is never mistaken for a shared view. */
 export const BACKUP_NOTICE =
-  'A full backup contains everything in this profile, including every note and every saved snapshot. It is not encrypted. Keep it somewhere only you can open.';
+  'A full backup contains everything in this profile, including every note and every saved snapshot. It is not encrypted. Keep it somewhere only you can open, or download a locked copy below.';
+
+/** Shown beside the locked backup. Plain about what a password does and does not do (D-071). */
+export const LOCKED_NOTICE =
+  'A locked backup is the same full backup, encrypted on this device with a password you choose. The app cannot open it without that password and cannot recover it if you forget it. Anyone who learns or guesses the password can read everything in the file, and the file still shows that a backup exists.';
 
 /** Shown when the person is about to import a file. */
 export const IMPORT_NOTICE =

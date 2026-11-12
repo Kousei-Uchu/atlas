@@ -30,7 +30,7 @@ p { margin: 0; }
 .save-status[data-status='error'], .save-status[data-status='conflict'] { color: var(--danger); }
 
 /* Buttons and fields */
-button, select, input[type='text'], input[type='search'], textarea {
+button, select, input[type='text'], input[type='search'], input[type='password'], input[type='date'], input[type='number'], textarea {
   font: inherit;
   color: var(--text);
   background: var(--surface);

@@ -17,6 +17,7 @@
 // held back and why.
 import { effectiveSensitivity, getAnswer, getCategoryTree } from './selectors.js';
 import { resolveAll, listConflicts } from './audience-resolution.js';
+import { valueText } from './item-values.js';
 
 /** Why an item is in or out. Only 'included' means it is in the output. */
 export const INCLUSION_REASONS = Object.freeze(['included', 'hidden-category', 'sensitive', 'restricted', 'conflict']);
@@ -88,7 +89,7 @@ export function evaluateView(profile, view) {
         differs: r.differs, moreOpenThanDefault: r.moreOpenThanDefault,
       };
     } else {
-      base.value = { kind: 'text', text: answer?.text ?? '' };
+      base.value = { kind: 'text', text: valueText(item, answer) };
     }
     const text = answer?.note ?? '';
     base.note = view.includeNotes === true && answer?.noteShareable === true && text !== '' ? text : null;

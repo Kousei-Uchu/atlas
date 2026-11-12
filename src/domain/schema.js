@@ -58,19 +58,25 @@ export const categorySchema = z.strictObject({
 export const itemSchema = z.strictObject({
   id,
   categoryId: id,
-  type: z.enum(['state', 'text']),
+  type: z.enum(['state', 'text', 'number', 'date', 'choice']),
   label: z.string().min(1).max(LIMITS.labelLength),
   description: z.string().max(LIMITS.descriptionLength),
   sortOrder,
   sensitivity: sensitivitySchema,
   tags: z.array(z.string().min(1).max(LIMITS.tagLength)).max(LIMITS.tagsPerItem),
   origin,
+  // Only a choice item has options, and only a number item has a unit (checked in validation.js).
+  options: z.array(z.strictObject({ id, label: z.string().min(1).max(LIMITS.optionLabelLength) })).max(LIMITS.optionsPerItem).optional(),
+  unit: z.string().min(1).max(LIMITS.unitLength).optional(),
 });
 
 export const answerSchema = z.strictObject({
   itemId: id,
   stateId: id.optional(),
   text: z.string().max(LIMITS.textLength).optional(),
+  // A choice answer: the ids of the chosen options, none repeated. A number or date answer is kept in `text`
+  // in one canonical form, so every export, view and share path reads it as the words it is.
+  choices: z.array(id).max(LIMITS.optionsPerItem).optional(),
   note: z.string().max(LIMITS.noteLength).optional(),
   noteShareable: z.boolean(),
 });
