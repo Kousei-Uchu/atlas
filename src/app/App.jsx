@@ -10,6 +10,7 @@ import { DecisionTreePanel } from '../features/decision-tree/DecisionTreePanel.j
 import { BodyMapPanel } from '../features/body-map/BodyMapPanel.jsx';
 import { AboutPanel } from '../features/about/AboutPanel.jsx';
 import { UpdateNotice } from './UpdateNotice.jsx';
+import { SectionTabs, SectionPanel } from './SectionTabs.jsx';
 import { useEffect, useState } from 'react';
 import { openAtlasDb } from '../storage/database.js';
 import { useProfileSession } from '../features/editor/use-profile-session.js';
@@ -43,6 +44,7 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
   const { phase, profile, undo, redo } = session;
   // Called before any early return, so the saved theme applies even when the chart cannot load.
   const theme = useTheme(db);
+  const [section, setSection] = useState('chart');
 
   // Standard undo/redo shortcuts, except inside text fields where the browser handles them.
   useEffect(() => {
@@ -117,7 +119,7 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
     <div className="app">
       <a className="skip-link" href="#main">Skip to the chart</a>
       <header className="app-header">
-        <div>
+        <div className="app-title">
           <h1>Personal Boundaries &amp; Identity Atlas</h1>
           <p className="profile-name">Profile: {profile.title}</p>
         </div>
@@ -132,8 +134,7 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
 
       <main className="app-main" id="main" tabIndex={-1}>
         <UpdateNotice />
-        <Notice title="Preferences are not consent">{CONSENT_NOTICE}</Notice>
-
+        <SectionTabs active={section} onChange={setSection} />
         {session.saveError && (
           <p className="banner" role="alert" data-tone="error">
             {session.saveStatus === 'conflict' ? CONFLICT_HELP : session.saveError}
@@ -144,20 +145,31 @@ export function Atlas({ db, debounceMs, now = () => new Date().toISOString(), ma
         )}
         {session.actionError && <p className="banner" role="alert" data-tone="error">{session.actionError}</p>}
 
-        <MatrixView profile={profile} run={session.run} announce={session.announce} />
-        <PalettePanel profile={profile} run={session.run} announce={session.announce} />
-        <ClickSettings profile={profile} run={session.run} announce={session.announce} />
-        <ModulesPanel profile={profile} run={session.run} announce={session.announce} />
-        <TimelinePanel profile={profile} run={session.run} announce={session.announce} onMakeProfile={session.createProfileFromSnapshot} />
-        <DimensionMapPanel profile={profile} run={session.run} announce={session.announce} />
-        <DecisionTreePanel profile={profile} />
-        <ComparePanel profile={profile} profiles={session.profiles} readProfile={session.readProfile} />
-        <RelationshipGraphPanel profile={profile} run={session.run} announce={session.announce} />
-        <OverlapRadialPanel profile={profile} />
-        <BodyMapPanel profile={profile} run={session.run} announce={session.announce} />
-        <AudiencesPanel profile={profile} run={session.run} announce={session.announce} />
-        <ViewsPanel profile={profile} run={session.run} announce={session.announce} now={now} saveFile={saveFile} saveBlob={saveBlob} makePng={makePng} />
-        {managementPanels(profile.id, true)}
+        <SectionPanel id="chart" active={section}>
+          <Notice title="Preferences are not consent">{CONSENT_NOTICE}</Notice>
+          <MatrixView profile={profile} run={session.run} announce={session.announce} />
+        </SectionPanel>
+        <SectionPanel id="modules" active={section}>
+          <ModulesPanel profile={profile} run={session.run} announce={session.announce} />
+        </SectionPanel>
+        <SectionPanel id="explore" active={section}>
+          <TimelinePanel profile={profile} run={session.run} announce={session.announce} onMakeProfile={session.createProfileFromSnapshot} />
+          <DimensionMapPanel profile={profile} run={session.run} announce={session.announce} />
+          <DecisionTreePanel profile={profile} />
+          <ComparePanel profile={profile} profiles={session.profiles} readProfile={session.readProfile} />
+          <RelationshipGraphPanel profile={profile} run={session.run} announce={session.announce} />
+          <OverlapRadialPanel profile={profile} />
+          <BodyMapPanel profile={profile} run={session.run} announce={session.announce} />
+        </SectionPanel>
+        <SectionPanel id="share" active={section}>
+          <AudiencesPanel profile={profile} run={session.run} announce={session.announce} />
+          <ViewsPanel profile={profile} run={session.run} announce={session.announce} now={now} saveFile={saveFile} saveBlob={saveBlob} makePng={makePng} />
+        </SectionPanel>
+        <SectionPanel id="settings" active={section}>
+          <PalettePanel profile={profile} run={session.run} announce={session.announce} />
+          <ClickSettings profile={profile} run={session.run} announce={session.announce} />
+          {managementPanels(profile.id, true)}
+        </SectionPanel>
       </main>
 
       <footer className="app-footer">

@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 const appearance = (page) => page.getByRole('combobox', { name: 'Appearance' });
 const seriousViolations = async (page, { exclude = [] } = {}) => {
@@ -13,6 +13,7 @@ const seriousViolations = async (page, { exclude = [] } = {}) => {
 
 /** Make "Yes" unreadable on purpose: text colour equal to its background colour. */
 async function makeYesUnreadable(page) {
+  await tab(page, 'Settings');
   await page.getByRole('button', { name: 'Edit palette' }).click();
   await page.getByRole('button', { name: 'Edit Yes' }).click();
   const background = await page.getByRole('textbox', { name: 'Background colour, as a hex code' }).inputValue();
@@ -56,6 +57,7 @@ test('high contrast keeps an unreadable custom state readable, and keeps the sto
   await saved(page);
 
   await appearance(page).selectOption({ label: 'High contrast' });
+  await tab(page, 'Chart');
   const badge = stateButton(page, HUG).locator('.state-badge');
   await expect(badge).toHaveCSS('background-color', 'rgb(0, 0, 0)');
   await expect(badge).toHaveCSS('color', 'rgb(255, 255, 255)');

@@ -4,6 +4,7 @@
 // show the note first (D-009), and the command refuses without it.
 import { useId, useState } from 'react';
 import { ConfirmDialog } from '../../components/ConfirmDialog.jsx';
+import { CommunityTemplate } from './CommunityTemplate.jsx';
 import { TEMPLATES } from '../../content/templates/index.js';
 import { ADULT_MODULE_NOTICE, MATURE_PHRASING_NOTICE } from '../../content/notices.js';
 import { addModule, moduleStatus, setModuleVisibility } from '../../domain/module-commands.js';
@@ -215,6 +216,7 @@ export function ModulesPanel({ profile, run, announce, templates = TEMPLATES }) 
               );
             })}
           </ul>
+          <CommunityTemplate run={run} announce={announce} />
         </div>
       )}
 

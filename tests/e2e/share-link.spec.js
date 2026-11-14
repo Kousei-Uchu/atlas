@@ -1,14 +1,16 @@
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, stateButton, HUG } from './fixtures.js';
+import { test, expect, stateButton, HUG, tab } from './fixtures.js';
 import jsQR from 'jsqr';
 import { SHARE_PRIVACY_NOTICE } from '../../src/content/notices.js';
 
 async function viewWithHug(page) {
   await stateButton(page, HUG).click();
+  await tab(page, 'Share');
   await page.getByRole('button', { name: /^Open audiences/ }).click();
   await page.getByLabel('Name of the audience').fill('Friends');
   await page.getByLabel('Kind of audience').selectOption({ label: 'Friends' });
   await page.getByRole('button', { name: 'Add audience' }).click();
+  await tab(page, 'Share');
   await page.getByRole('button', { name: 'Open views' }).click();
   await page.getByLabel('Name of the view').fill('Guide for friends');
   await page.getByLabel('Who it is for').selectOption({ label: 'Friends' });
@@ -71,6 +73,7 @@ test('the link is removed when the view changes (M5-03)', async ({ page }) => {
   await viewWithHug(page);
   await page.getByRole('button', { name: 'Make a link' }).click();
   await expect(page.getByLabel('Share link')).toBeVisible();
+  await tab(page, 'Share');
   await page.getByRole('checkbox', { name: new RegExp(`^${HUG}`) }).uncheck();
   await expect(page.getByLabel('Share link')).toHaveCount(0);
 });

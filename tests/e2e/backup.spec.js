@@ -1,10 +1,11 @@
 import { readFileSync } from 'node:fs';
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 test('downloads a full backup and imports it as a new profile', async ({ page }) => {
   await stateButton(page, HUG).click(); // Unsure
   await saved(page);
 
+  await tab(page, 'Settings');
   const [download] = await Promise.all([
     page.waitForEvent('download'),
     page.getByRole('button', { name: 'Download full backup' }).click(),
@@ -14,6 +15,7 @@ test('downloads a full backup and imports it as a new profile', async ({ page })
   const backup = JSON.parse(readFileSync(path, 'utf8'));
   expect(backup).toMatchObject({ format: 'atlas-backup', kind: 'full-profile', formatVersion: 1 });
 
+  await tab(page, 'Settings');
   await page.getByLabel('Choose a backup file (.json)').setInputFiles(path);
   const preview = page.getByRole('region', { name: 'Import preview' });
   await expect(preview).toContainText('Ready to import: My profile');
@@ -22,10 +24,12 @@ test('downloads a full backup and imports it as a new profile', async ({ page })
 
   // Two profiles now exist, and the copy kept the answer.
   await expect(page.getByLabel('Open a profile').locator('option')).toHaveCount(2);
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unsure');
 });
 
 test('refuses a bad file with a readable message and changes nothing', async ({ page }) => {
+  await tab(page, 'Settings');
   await page.getByLabel('Choose a backup file (.json)').setInputFiles({
     name: 'bad.json', mimeType: 'application/json', buffer: Buffer.from('{ definitely not json'),
   });

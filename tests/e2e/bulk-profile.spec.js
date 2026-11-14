@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 const FIVE = 'A high five';
 
@@ -13,11 +13,13 @@ test('bulk state: select two items, confirm, keep after reload, undo in one step
   const dialog = page.getByRole('alertdialog');
   await expect(dialog).toContainText('This sets 2 items to “No”');
   await dialog.getByRole('button', { name: 'Set 2 items' }).click();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('No');
   await expect(stateButton(page, FIVE)).toHaveText('No');
   await saved(page);
 
   await page.reload();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('No');
 
   await page.getByRole('button', { name: 'Select items' }).click();
@@ -25,8 +27,10 @@ test('bulk state: select two items, confirm, keep after reload, undo in one step
   await page.getByLabel('Set selected to').selectOption({ label: 'Unanswered' });
   await page.getByRole('button', { name: 'Set state…' }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Set 1 item' }).click();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unanswered');
   await page.getByRole('button', { name: 'Undo' }).click();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('No');
 });
 
@@ -39,29 +43,37 @@ test('Escape closes the bulk dialog and changes nothing (M2-07)', async ({ page,
   await expect(page.getByRole('alertdialog')).toContainText('never consent');
   await page.keyboard.press('Escape');
   await expect(page.getByRole('alertdialog')).toHaveCount(0);
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unanswered');
 });
 
 test('rename and copy a profile (M2-08)', async ({ page }) => {
   const field = page.getByRole('textbox', { name: 'Name of this profile' });
+  await tab(page, 'Settings');
   await field.fill('Work me');
   await page.getByRole('button', { name: 'Rename', exact: true }).click();
   await expect(page.locator('.profile-name')).toHaveText('Profile: Work me');
   await saved(page);
 
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();
+  await tab(page, 'Settings');
   await page.getByRole('button', { name: 'Make a copy of this profile' }).click();
   await expect(page.locator('.profile-name')).toHaveText('Profile: Copy of Work me');
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unsure');
   await saved(page);
 
   await page.reload();
   await expect(page.locator('.profile-name')).toHaveText('Profile: Copy of Work me');
+  await tab(page, 'Settings');
   await expect(page.getByRole('combobox', { name: 'Open a profile' }).locator('option')).toHaveCount(2);
 });
 
 test('the storage section reports sizes, and axe is clean with bulk selecting on (M2-07, M2-08)', async ({ page }) => {
+  await tab(page, 'Settings');
   await expect(page.getByText(/This profile takes about/)).toBeVisible();
+  await tab(page, 'Chart');
   await page.getByRole('button', { name: 'Select items' }).click();
   await page.getByRole('checkbox', { name: `Select ${HUG}` }).check();
   const results = await new AxeBuilder({ page }).analyze();

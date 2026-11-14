@@ -35,3 +35,6 @@ export const stateButton = (page, label) => page.getByRole('button', { name: new
 
 /** Wait until autosave has committed. */
 export const saved = (page) => expect(page.locator('.save-status')).toHaveText('Saved');
+
+/** Show a section of the app (Chart, Modules, Explore, Share or Settings). Harmless if it is already showing. */
+export const tab = (page, name) => page.getByRole('tab', { name, exact: true }).click();

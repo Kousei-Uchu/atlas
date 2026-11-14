@@ -1,0 +1,68 @@
+/* App shell and calmer chart rows (UX pass, D-076). Tokens only. */
+
+/* Header: title left, controls right, one compact band. */
+.app { gap: var(--space-3); }
+.app-header {
+  padding-block: var(--space-1);
+  align-items: center;
+}
+.app-title { display: grid; min-width: 0; }
+.app-header h1 { font-size: 1.15rem; line-height: 1.25; }
+.app-header .profile-name { font-size: 0.85rem; }
+.app-header .theme-switch label { font-weight: 500; font-size: 0.9rem; }
+/* Compact header controls only where a pointer is precise; touch keeps the full 44px targets. */
+@media (pointer: fine) {
+  .app-header .theme-switch select { min-height: 2.25rem; padding-block: var(--space-1); }
+  .app-header .toolbar button { min-height: 2.25rem; padding-block: var(--space-1); }
+}
+.app-header .save-status { min-width: 0; font-size: 0.9rem; color: var(--text-muted); }
+
+/* Section tabs. */
+.section-tabs {
+  display: flex; flex-wrap: wrap; gap: var(--space-1);
+  border-bottom: 2px solid var(--border-soft);
+  position: sticky; top: 0; z-index: 5; background: var(--bg);
+}
+.section-tabs [role='tab'] {
+  flex: 0 0 auto;
+  border: 0; border-bottom: 3px solid transparent; border-radius: var(--radius) var(--radius) 0 0;
+  background: transparent; margin-bottom: -2px;
+  padding-inline: var(--space-4); font-weight: 600; color: var(--text-muted);
+}
+.section-tabs [role='tab'][aria-selected='true'] { color: var(--text); border-bottom-color: var(--accent); background: var(--surface); }
+.section-tabs [role='tab']:hover { color: var(--text); }
+.section-panel { display: grid; gap: var(--space-3); grid-template-columns: minmax(0, 1fr); }
+.section-panel[hidden] { display: none; }
+
+/* Quieter, shorter instruction text above the chart. */
+.how-to { font-size: 0.9rem; color: var(--text-muted); }
+
+/* Category cards: a clear header, quiet management actions. */
+.category { padding: var(--space-3) var(--space-4); gap: var(--space-2); }
+.category-header { padding-bottom: var(--space-2); border-bottom: 2px solid var(--border-soft); }
+.category-header h2, .category-header h3 { font-size: 1.1rem; }
+.category-actions button, .item-actions button {
+  min-height: 2rem; padding: 0 var(--space-2);
+  font-size: 0.85rem; text-decoration: none; color: var(--text-muted);
+}
+.category-actions button:hover:not(:disabled), .item-actions button:hover:not(:disabled) { text-decoration: underline; color: var(--text); }
+.category-actions button.danger-text, .item-actions button.danger-text { color: var(--danger); }
+
+/* Item rows: one tidy line on wide screens, with the management actions tucked to the right of the label. */
+.item-row { padding-block: var(--space-2); gap: var(--space-1); border-top: 1px solid var(--border-soft); }
+.item-row:first-child { border-top: 0; }
+.item-main .item-label { font-weight: 600; }
+.item-actions { justify-content: flex-start; margin-top: calc(var(--space-1) * -1); }
+.state-picker-label { font-size: 0.8rem; }
+
+/* The "add" forms read as secondary. */
+.add-form { padding-top: var(--space-2); }
+
+/* Collapsed feature panels: calmer cards with a short title and one button. */
+.panel > h2:only-child, .panel-collapsed { font-size: 1.05rem; }
+
+@media (max-width: 41.99rem) {
+  .app { padding: var(--space-2) var(--space-3); }
+  .app-header { gap: var(--space-2); }
+  .section-tabs [role='tab'] { padding-inline: var(--space-2); font-size: 0.95rem; flex: 1 1 auto; }
+}

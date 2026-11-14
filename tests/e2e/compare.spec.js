@@ -1,28 +1,33 @@
 // M7-05: comparing two charts on this device, through the production build (D-065).
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, HUG, stateButton } from './fixtures.js';
+import { test, expect, HUG, stateButton, tab } from './fixtures.js';
 
 const panel = (page) => page.locator('section.panel').filter({ has: page.getByRole('heading', { name: 'Compare charts' }) });
 
 // "My profile" ends at No; "My profile (as at Then)" is made from a snapshot taken at Unsure.
 async function twoCharts(page) {
   await stateButton(page, HUG).click();            // Unsure
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open timeline' }).click();
   await page.getByLabel('Name for this snapshot').fill('Then');
   await page.getByRole('button', { name: 'Save snapshot' }).click();
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();            // No
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Make a new profile from Then' }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Make new profile' }).click();
   await expect(page.getByText('Profile: My profile (as at Then)')).toBeVisible();
 }
 
 test('with one chart, the panel says a second one is needed', async ({ page }) => {
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open comparison' }).click();
   await expect(panel(page)).toContainText('needs a second chart');
 });
 
 test('lists the differing answers side by side, and changes neither chart (M7-05)', async ({ page }) => {
   await twoCharts(page);
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open comparison' }).click();
   await panel(page).locator('label.field select').selectOption({ label: 'My profile' });
   const table = panel(page).getByRole('table', { name: 'Questions with different answers' });
@@ -34,11 +39,13 @@ test('lists the differing answers side by side, and changes neither chart (M7-05
   await expect(panel(page)).toContainText('a different answer');
   await expect(panel(page)).not.toContainText(/score|compatible|match|percent|overall/i);
   // reading changed nothing: this chart still says Unsure
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unsure');
 });
 
 test('axe finds nothing serious in any theme, and it reflows at 320 px', async ({ page }) => {
   await twoCharts(page);
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open comparison' }).click();
   await panel(page).locator('label.field select').selectOption({ label: 'My profile' });
   await expect(panel(page).getByRole('table')).toBeVisible();

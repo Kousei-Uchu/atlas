@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, HUG } from './fixtures.js';
+import { test, expect, HUG, tab } from './fixtures.js';
 import { checkEnvelope } from '../../src/share/envelope.js';
 import { encodePayload } from '../../src/share/codec.js';
 import { CONSENT_NOTICE } from '../../src/content/notices.js';
@@ -36,6 +36,7 @@ test('a share link opens as a read-only preview and leaves local data alone (D-0
   await page.getByRole('button', { name: 'Leave without saving' }).click();
   await expect(page.getByRole('button', { name: new RegExp(`^${HUG}:`) })).toBeVisible();
   expect(new URL(page.url()).hash).toBe('');
+  await tab(page, 'Settings');
   await expect(page.getByRole('combobox', { name: 'Open a profile' }).locator('option')).toHaveCount(1);
 });
 
@@ -49,6 +50,7 @@ test('Save a copy adds one new profile, opens it, and keeps the first profile (D
   expect(new URL(page.url()).hash).toBe('');
   await page.reload();
   await expect(page.locator('.profile-name')).toHaveText('Profile: Shared: Guide for friends');
+  await tab(page, 'Settings');
   await expect(page.getByRole('combobox', { name: 'Open a profile' }).locator('option')).toHaveCount(2);
 });
 

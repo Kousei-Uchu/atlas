@@ -1,11 +1,12 @@
 // M8-04: a backup locked with a password, through the production build (D-071).
 import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 const PASSWORD = 'three plain words here';
 
 async function lockedDownload(page) {
+  await tab(page, 'Settings');
   await page.getByLabel('Password (at least', { exact: false }).fill(PASSWORD);
   await page.getByLabel('Type the password again').fill(PASSWORD);
   const [download] = await Promise.all([
@@ -26,6 +27,7 @@ test('lock a backup with a password, then unlock it and import it as a new profi
   const file = JSON.parse(text);
   expect(file).toMatchObject({ format: 'atlas-locked-backup', formatVersion: 1, kdf: { name: 'PBKDF2-SHA256', rounds: 600000 }, cipher: { name: 'AES-256-GCM' } });
   for (const word of ['My profile', 'atlas-backup"', 'categories', HUG, PASSWORD]) expect(text).not.toContain(word);
+  await tab(page, 'Settings');
   await expect(page.locator('[role="status"][aria-live="polite"]')).toContainText('Locked backup downloaded');
   // The password fields are emptied after use.
   await expect(page.getByLabel('Type the password again')).toHaveValue('');
@@ -49,10 +51,12 @@ test('lock a backup with a password, then unlock it and import it as a new profi
   await expect(locked).toHaveCount(0);
   await preview.getByRole('button', { name: 'Import as new profile' }).click();
   await expect(page.getByLabel('Open a profile').locator('option')).toHaveCount(2);
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unsure');
 });
 
 test('a short password or two different passwords write no file (M8-04)', async ({ page }) => {
+  await tab(page, 'Settings');
   await page.getByLabel('Password (at least', { exact: false }).fill('short');
   await page.getByLabel('Type the password again').fill('short');
   await page.getByRole('button', { name: 'Download locked backup' }).click();
@@ -69,6 +73,7 @@ test('a damaged or forged locked file is refused with a readable message and cha
   const path = await (await lockedDownload(page)).path();
   const file = JSON.parse(readFileSync(path, 'utf8'));
   file.kdf.rounds = 2_000_000_000;   // a file asking the browser for absurd work is refused before any work
+  await tab(page, 'Settings');
   await page.getByLabel('Choose a backup file (.json)').setInputFiles({
     name: 'forged.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(file)),
   });
@@ -83,6 +88,7 @@ test('a damaged or forged locked file is refused with a readable message and cha
 test('axe finds nothing serious in any theme, and it reflows at 320 px', async ({ page }) => {
   await stateButton(page, HUG).click();
   const path = await (await lockedDownload(page)).path();
+  await tab(page, 'Settings');
   await page.getByLabel('Choose a backup file (.json)').setInputFiles(path);
   await expect(page.getByRole('region', { name: 'Locked backup' })).toBeVisible();
   for (const label of ['Light', 'Dark', 'High contrast']) {

@@ -1,6 +1,6 @@
 // M6-04: the app opens with no connection, keeps the person's data, and never caches it (D-059).
 import http from 'node:http';
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 async function waitForWorker(page) {
   await page.evaluate(async () => { await navigator.serviceWorker.ready; });
@@ -18,6 +18,7 @@ test('after one visit the app opens offline and the saved chart is still there',
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unsure'); // the first click's state came back from storage
   await context.setOffline(false);
 });
@@ -41,6 +42,7 @@ test('deleting all local data leaves the shell, and the app still opens clean of
   await waitForWorker(page);
   await stateButton(page, HUG).click();
   await saved(page);
+  await tab(page, 'Settings');
   await page.getByRole('button', { name: 'Delete all local data' }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Delete everything' }).click();
   await context.setOffline(true);
@@ -75,6 +77,7 @@ test('a newer version waits for the person, keeps their data, then takes over on
     await page.goto(origin);
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
     await waitForWorker(page);
+    await tab(page, 'Chart');
     await stateButton(page, HUG).click();
     await saved(page);
     const oldName = (await page.evaluate(() => caches.keys()))[0];

@@ -1,4 +1,4 @@
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 // One pass through everything M2 added, in the order a person might use it (M2-10).
 // The fixture also fails the test if any request leaves the app's own origin (I-06).
@@ -6,6 +6,7 @@ test('palette, click behaviour, search, bulk change and copy, in one session', a
   test.skip(isMobile, 'long desktop flow; each step has its own phone-sized spec');
 
   // 1. Rename a state. The answer keeps pointing at it (I-03).
+  await tab(page, 'Settings');
   await page.getByRole('button', { name: 'Edit palette' }).click();
   await page.getByRole('button', { name: 'Edit Yes' }).click();
   await page.getByRole('textbox', { name: 'Name', exact: true }).fill('Happy to');
@@ -19,6 +20,7 @@ test('palette, click behaviour, search, bulk change and copy, in one session', a
   await page.getByRole('button', { name: 'Hide click behaviour' }).click();
 
   // 3. A primary click now goes toward the renamed state.
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();
   await expect(stateButton(page, HUG)).toHaveText('Conditional');
 
@@ -34,8 +36,10 @@ test('palette, click behaviour, search, bulk change and copy, in one session', a
 
   // 5. Make a copy. It carries the answer, the new name and both settings.
   await saved(page);
+  await tab(page, 'Settings');
   await page.getByRole('button', { name: 'Make a copy of this profile' }).click();
   await expect(page.locator('.profile-name')).toHaveText('Profile: Copy of My profile');
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Happy to');
   await stateButton(page, HUG).click(); // one step past the end goes around
   await expect(stateButton(page, HUG)).toHaveText('No');
@@ -44,5 +48,6 @@ test('palette, click behaviour, search, bulk change and copy, in one session', a
   await saved(page);
   await page.reload();
   await expect(page.locator('.profile-name')).toHaveText('Profile: Copy of My profile');
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('No');
 });

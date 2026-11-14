@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 test('production HTML carries a CSP that forbids all connections (M1-AC-10)', async ({ page }) => {
   const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
@@ -21,6 +21,7 @@ test('uses the app without making any request to another origin (I-06)', async (
   await stateButton(page, HUG).click();
   await saved(page);
   await page.reload();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unsure');
   // The fixture fails the test if any request left the app's own origin.
 });

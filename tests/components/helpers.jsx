@@ -23,6 +23,9 @@ export async function renderAtlas(db, props = {}) {
   const view = render(<Atlas db={db} debounceMs={0} {...props} />);
   await screen.findByRole('heading', { level: 1 });
   await waitFor(() => expect(screen.queryByText('Loading…')).toBeNull());
+  // These tests exercise one panel at a time, whichever section it lives in. Showing every section here
+  // keeps them about the panel; the tabs themselves are tested in section-tabs.test.jsx and the e2e suite.
+  if (!props.keepSectionsHidden) document.querySelectorAll('.section-panel[hidden]').forEach((el) => el.removeAttribute('hidden'));
   return { user, ...view };
 }
 

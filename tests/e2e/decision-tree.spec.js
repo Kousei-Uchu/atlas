@@ -1,10 +1,11 @@
 // M7-04: the decision tree, driven through the production build (D-064).
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect } from './fixtures.js';
+import { test, expect, tab } from './fixtures.js';
 
 const card = (page, title) => page.locator('.module').filter({ has: page.getByRole('heading', { name: title, exact: true }) });
 
 async function turnOn(page, title) {
+  await tab(page, 'Modules');
   await page.getByRole('button', { name: 'Open module library' }).click();
   await card(page, title).getByRole('button', { name: `Add ${title}` }).click();
   const dialog = page.getByRole('alertdialog');
@@ -13,20 +14,24 @@ async function turnOn(page, title) {
 }
 
 test('without the plan the panel says what to turn on', async ({ page }) => {
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open decision tree' }).click();
   await expect(page.getByText('Turn that module on')).toBeVisible();
 });
 
 test('shows what is written and chosen in the plan as a nested list, and edits nothing (M7-04)', async ({ page }) => {
   await turnOn(page, 'Overwhelm or support plan');
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open decision tree' }).click();
   await expect(page.getByText('nothing has been written or chosen yet')).toBeVisible();
   await expect(page.getByText('Nothing here yet.').first()).toBeVisible();
   await page.getByRole('button', { name: 'Close decision tree' }).click();
 
+  await tab(page, 'Chart');
   await page.getByRole('textbox', { name: 'Answer for How I feel when it is getting too much' }).fill('Loud rooms');
   await page.getByRole('button', { name: /^Someone asking if I want help/ }).click();
 
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open decision tree' }).click();
   const tree = page.getByRole('list', { name: 'When it is getting too much' });
   await expect(tree).toContainText('Early signs');
@@ -44,7 +49,9 @@ test('shows what is written and chosen in the plan as a nested list, and edits n
 
 test('axe finds nothing serious in any theme, and it reflows at 320 px', async ({ page }) => {
   await turnOn(page, 'Overwhelm or support plan');
+  await tab(page, 'Chart');
   await page.getByRole('textbox', { name: 'Answer for How I feel when it is getting too much' }).fill('A very long note that must wrap inside a narrow screen without sideways scrolling');
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open decision tree' }).click();
   for (const label of ['Light', 'Dark', 'High contrast']) {
     await page.getByRole('combobox', { name: 'Appearance' }).selectOption({ label });

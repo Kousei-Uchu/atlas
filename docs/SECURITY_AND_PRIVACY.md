@@ -34,6 +34,9 @@ A profile can hold snapshots, earlier copies of its state answers (D-063, schema
 | Older data is converted on a copy, never written on read; newer data is refused; a failed conversion leaves the record as it was | `tests/domain/migrations.test.js`, `tests/storage/migration-flow.test.js` |
 | Storage that cannot open, a full disk, and an unreadable record are shown plainly and lose nothing | `tests/e2e/storage-failure.spec.js` |
 
+## Community template files
+A template file someone else made is opened only when the person chooses it. It is size-limited, parsed safely, held to the same strict schema as bundled templates, refused if it holds web addresses, contact details, markup or hidden characters, shown in full, and added only after the person ticks that they read it. It is added hidden, never less private than personal, and with no link to any bundled module. The threat table is in `docs/decisions/0034-community-templates.md`.
+
 ## Known limits
 
 - Browser storage is not a backup and other users of the same browser profile may read it. The app says so on screen.

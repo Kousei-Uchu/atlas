@@ -1,12 +1,14 @@
 import fs from 'node:fs';
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, stateButton, saved, HUG } from './fixtures.js';
+import { test, expect, stateButton, saved, HUG, tab } from './fixtures.js';
 
 async function makeView(page, name = 'For my friends') {
+  await tab(page, 'Share');
   await page.getByRole('button', { name: /^Open audiences/ }).click();
   await page.getByLabel('Name of the audience').fill('Friends');
   await page.getByLabel('Kind of audience').selectOption({ label: 'Friends' });
   await page.getByRole('button', { name: 'Add audience' }).click();
+  await tab(page, 'Share');
   await page.getByRole('button', { name: 'Open views' }).click();
   await page.getByLabel('Name of the view').fill(name);
   await page.getByLabel('Who it is for').selectOption({ label: 'Friends' });
@@ -23,6 +25,7 @@ test('build a view, see what is held back, and download Markdown, SVG and PNG (M
   const review = page.getByTestId('review');
   await expect(page.getByTestId('review-counts')).toContainText('0 items included');
 
+  await tab(page, 'Share');
   await page.getByRole('checkbox', { name: new RegExp(`^${HUG}`) }).check();
   await expect(page.getByTestId('review-counts')).toContainText('1 item included, 0 items held back');
   await expect(review).toContainText(HUG);
@@ -47,11 +50,13 @@ test('build a view, see what is held back, and download Markdown, SVG and PNG (M
 
   await saved(page);
   await page.reload();
+  await tab(page, 'Share');
   await page.getByRole('button', { name: 'Open views' }).click();
   await expect(page.getByRole('listitem', { name: 'For my friends' })).toContainText('1 item included');
 });
 
 test('held-back items stay out of every download until chosen on their own (I-11)', async ({ page }) => {
+  await tab(page, 'Modules');
   await page.getByRole('button', { name: 'Open module library' }).click();
   for (const title of ['Intimacy boundaries', 'Physical contact']) {
     const card = page.locator('.module').filter({ has: page.getByRole('heading', { name: title, exact: true }) });
@@ -67,6 +72,7 @@ test('held-back items stay out of every download until chosen on their own (I-11
   const sensitiveLabel = (await sensitive.locator('xpath=ancestor::label').innerText()).replace(/\s*\(sensitive\)\s*$/, '').trim();
   await restricted.check();
   await sensitive.check();
+  await tab(page, 'Share');
   await page.getByRole('checkbox', { name: new RegExp(`^${HUG}`) }).check();
 
   await expect(page.getByTestId('review')).toContainText('Held back: it is restricted');
@@ -90,6 +96,7 @@ test('held-back items stay out of every download until chosen on their own (I-11
 
 test('the views screen has no serious accessibility violations in any theme (M4-05)', async ({ page }) => {
   await makeView(page);
+  await tab(page, 'Share');
   await page.getByRole('checkbox', { name: new RegExp(`^${HUG}`) }).check();
   await page.getByRole('button', { name: 'Show Markdown preview' }).click();
   for (const theme of ['Light', 'Dark', 'High contrast']) {
@@ -104,6 +111,7 @@ test('download a CSV that holds only what the view includes (M8-01)', async ({ p
   await stateButton(page, HUG).click();
   await makeView(page);
   await expect(page.getByRole('button', { name: 'Download CSV spreadsheet' })).toBeDisabled();
+  await tab(page, 'Share');
   await page.getByRole('checkbox', { name: new RegExp(`^${HUG}`) }).check();
   const csv = await download(page, 'Download CSV spreadsheet');
   expect(csv.suggestedFilename()).toMatch(/^atlas-for-my-friends-\d{4}-\d{2}-\d{2}\.csv$/);
@@ -121,6 +129,7 @@ test('download a web page that holds only what the view includes, and opens with
   await stateButton(page, HUG).click();
   await makeView(page);
   await expect(page.getByRole('button', { name: 'Download web page (HTML)' })).toBeDisabled();
+  await tab(page, 'Share');
   await page.getByRole('checkbox', { name: new RegExp(`^${HUG}`) }).check();
   const file = await download(page, 'Download web page (HTML)');
   expect(file.suggestedFilename()).toMatch(/^atlas-for-my-friends-\d{4}-\d{2}-\d{2}\.html$/);

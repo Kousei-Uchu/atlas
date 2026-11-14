@@ -1,6 +1,6 @@
 // M8-05: number, date and choice items, through the production build (D-072).
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, saved } from './fixtures.js';
+import { test, expect, saved, tab } from './fixtures.js';
 
 const live = (page) => page.locator('[role="status"][aria-live="polite"]');
 
@@ -53,6 +53,7 @@ test('add a number, a date and a choice item, answer them, and find them again a
 
   await saved(page);
   await page.reload();
+  await tab(page, 'Chart');
   await expect(page.getByRole('textbox', { name: 'Answer for Hours of sleep (hours)' })).toHaveValue('7.5');
   await expect(page.getByLabel('Answer for Last check-in')).toHaveValue('2026-11-12');
   await expect(page.getByRole('group', { name: 'Choices for Good times' }).getByRole('checkbox', { name: 'Evenings' })).toBeChecked();

@@ -13,6 +13,9 @@ Gate (spec 16): "M6 complete: hardened security and accessibility, offline shell
 | Known limitations documented | Met | `KNOWN_LIMITATIONS.md`, in-app data-handling section |
 | No open critical or high privacy or data-loss issue | Met as far as known | tracker risk table |
 
+## Added after M6
+Features built after this gate was first written are covered by `docs/reviews/M8-hardening.md` (dependency audit, leak tests for inheritance and exports, fuzzing of community template files). The owner actions below also apply to them: in particular, on a real device make a chart, export it as a web page and as a PDF by print, make a locked backup, unlock it, and open a community template file.
+
 ## Before announcing the beta (owner actions)
 1. Run Firefox, Safari and iPhone Playwright projects and the short real-device check in `docs/reviews/M6-03-cross-browser-mobile.md`.
 2. Walk one chart with VoiceOver (Mac or iPhone) and TalkBack or NVDA if available.

@@ -1,4 +1,4 @@
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 test('the chart can be used with the keyboard alone', async ({ page, isMobile }) => {
   test.skip(isMobile, 'keyboard flow is a desktop concern');
@@ -39,6 +39,7 @@ test('focus is visible and tab order reaches the first state button', async ({ p
 
 test('the confirmation dialog traps focus and Escape cancels', async ({ page, isMobile }) => {
   test.skip(isMobile);
+  await tab(page, 'Settings');
   await page.getByRole('button', { name: 'Delete all local data' }).focus();
   await page.keyboard.press('Enter');
   const dialog = page.getByRole('alertdialog');

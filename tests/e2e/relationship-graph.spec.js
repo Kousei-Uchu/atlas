@@ -1,11 +1,12 @@
 // M7-06: the relationship graph, driven through the production build (D-066).
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, saved } from './fixtures.js';
+import { test, expect, saved, tab } from './fixtures.js';
 
 const panel = (page) => page.locator('section.panel').filter({ has: page.getByRole('heading', { name: 'Relationship graph' }) });
 const live = (page) => page.locator('[role="status"][aria-live="polite"]');
 
 async function addAudience(page, name, kind) {
+  await tab(page, 'Share');
   await page.getByRole('button', { name: /^Open audiences/ }).click();
   await page.getByLabel('Name of the audience').fill(name);
   await page.getByLabel('Kind of audience').selectOption({ label: kind });
@@ -14,6 +15,7 @@ async function addAudience(page, name, kind) {
 }
 
 test('without audiences the panel says where to make one', async ({ page }) => {
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open relationship graph' }).click();
   await expect(panel(page)).toContainText('Add one in the Audiences panel');
 });
@@ -21,6 +23,7 @@ test('without audiences the panel says where to make one', async ({ page }) => {
 test('place one audience inside another, in the list, and the picture is hidden from assistive technology (M7-06)', async ({ page }) => {
   await addAudience(page, 'Friends', 'Friends');
   await addAudience(page, 'Close ones', 'Close friends');
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open relationship graph' }).click();
   const list = panel(page).getByRole('list', { name: 'Audiences, with you at the top' });
   await expect(list).toContainText('Friends');
@@ -48,6 +51,7 @@ test('place one audience inside another, in the list, and the picture is hidden 
 test('axe finds nothing serious in any theme, and it reflows at 320 px', async ({ page }) => {
   await addAudience(page, 'Friends', 'Friends');
   await addAudience(page, 'A very long audience name that has to wrap on a small screen', 'Family');
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open relationship graph' }).click();
   await panel(page).getByLabel(/^Place A very long audience name/).selectOption({ label: 'Friends' });
   for (const label of ['Light', 'Dark', 'High contrast']) {

@@ -1,12 +1,14 @@
 // M8-02: print or save as PDF, from the export model only (D-069). Real printing is the browser's; here the
 // print call is replaced so the page can be checked as it would print.
-import { test, expect, stateButton, HUG } from './fixtures.js';
+import { test, expect, stateButton, HUG, tab } from './fixtures.js';
 
 async function makeView(page) {
+  await tab(page, 'Share');
   await page.getByRole('button', { name: /^Open audiences/ }).click();
   await page.getByLabel('Name of the audience').fill('Friends');
   await page.getByLabel('Kind of audience').selectOption({ label: 'Friends' });
   await page.getByRole('button', { name: 'Add audience' }).click();
+  await tab(page, 'Share');
   await page.getByRole('button', { name: 'Open views' }).click();
   await page.getByLabel('Name of the view').fill('For my friends');
   await page.getByLabel('Who it is for').selectOption({ label: 'Friends' });
@@ -21,6 +23,7 @@ test('print is off until the view includes something, then prints only the held-
   await stateButton(page, HUG).click();
   await makeView(page);
   await expect(page.getByRole('button', { name: 'Print or save as PDF' })).toBeDisabled();
+  await tab(page, 'Share');
   await page.getByRole('checkbox', { name: new RegExp(`^${HUG}`) }).check();
   await expect(page.getByTestId('print-sheet')).toHaveCount(0);
 
@@ -56,6 +59,7 @@ test('print is off until the view includes something, then prints only the held-
 test('the printable page can be made again and again (M8-02)', async ({ page }) => {
   await stateButton(page, HUG).click();
   await makeView(page);
+  await tab(page, 'Share');
   await page.getByRole('checkbox', { name: new RegExp(`^${HUG}`) }).check();
   for (let n = 1; n <= 2; n += 1) {
     await page.getByRole('button', { name: 'Print or save as PDF' }).click();

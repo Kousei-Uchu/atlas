@@ -1,5 +1,5 @@
 // M6-03: checks that do not depend on one browser engine, run in whichever projects are enabled.
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 test('the page tells the browser it is responsive and does not block zooming', async ({ page }) => {
   const content = await page.locator('meta[name=viewport]').getAttribute('content');
@@ -8,16 +8,21 @@ test('the page tells the browser it is responsive and does not block zooming', a
 });
 
 test('text fields are at least 16 px so iOS does not zoom the page when one is focused', async ({ page }) => {
-  for (let i = 0; i < 12; i += 1) {
-    const o = page.getByRole('button', { name: /^Open (?!a profile)/ }).first();
-    if (!(await o.count())) break;
-    await o.click();
+  const small = [];
+  for (const section of ['Chart', 'Modules', 'Explore', 'Share', 'Settings']) {
+    await tab(page, section);
+    for (let i = 0; i < 12; i += 1) {
+      const o = page.getByRole('button', { name: /^Open (?!a profile)/ }).first();
+      if (!(await o.count())) break;
+      await o.click();
+    }
+    small.push(...await page.evaluate(() => [...document.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]), select, textarea')]
+      .filter((e) => e.offsetParent !== null && parseFloat(getComputedStyle(e).fontSize) < 16)
+      .map((e) => `${e.tagName}:${e.id || e.name || e.className} ${getComputedStyle(e).fontSize}`)));
   }
-  const small = await page.evaluate(() => [...document.querySelectorAll('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=color]), select, textarea')]
-    .filter((e) => e.offsetParent !== null && parseFloat(getComputedStyle(e).fontSize) < 16)
-    .map((e) => `${e.tagName}:${e.id || e.name || e.className} ${getComputedStyle(e).fontSize}`));
   expect(small).toEqual([]);
 });
+
 
 test('landscape phone and a tablet width have no sideways scrolling', async ({ page }) => {
   for (const [width, height] of [[740, 360], [820, 1180], [1024, 768]]) {
@@ -52,6 +57,7 @@ test('the app works when the browser has no randomUUID, no clipboard and no comp
   await stateButton(page, HUG).click();
   await expect(page.locator('.save-status')).toHaveText('Saved');
   // Making a new item uses an id, which is what randomUUID was needed for.
+  await tab(page, 'Share');
   await page.getByRole('button', { name: /^Open audiences/ }).click();
   await page.getByLabel('Name of the audience').fill('Friends');
   await page.getByRole('button', { name: 'Add audience' }).click();

@@ -1,11 +1,12 @@
 // M7-03: timeline and snapshots, through the production build (D-063).
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 const live = (page) => page.locator('[role="status"][aria-live="polite"]');
 const panel = (page) => page.locator('section.panel').filter({ has: page.getByRole('heading', { name: 'Timeline and snapshots' }) });
 
 async function openTimeline(page) {
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open timeline' }).click();
 }
 async function save(page, name) {
@@ -16,18 +17,23 @@ async function save(page, name) {
 test('with nothing answered, a snapshot is refused in plain words', async ({ page }) => {
   await openTimeline(page);
   await save(page, 'Empty');
+  await tab(page, 'Explore');
   await expect(panel(page).getByRole('alert')).toContainText('no answers to save yet');
 });
 
 test('save, change, compare with now, and see it in plain words (M7-03)', async ({ page }) => {
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();            // Unsure
   await openTimeline(page);
+  await tab(page, 'Explore');
   await expect(panel(page)).toContainText('does not keep notes or your own words');
   await save(page, 'Before');
   await expect(live(page)).toContainText('Snapshot saved: Before');
   await expect(panel(page).getByRole('list', { name: 'Timeline, oldest first' })).toContainText('Before');
 
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();            // No
+  await tab(page, 'Explore');
   await expect(panel(page).getByText(/1 changed since the last snapshot/)).toBeVisible();
   await expect(panel(page).locator('.tl-compare')).toContainText('1 answer changed');
   await expect(panel(page).locator('.tl-compare')).toContainText(/Unsure, then No/);
@@ -37,19 +43,23 @@ test('save, change, compare with now, and see it in plain words (M7-03)', async 
 });
 
 test('snapshots survive a reload and stay out of the chart and exports', async ({ page }) => {
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();
   await openTimeline(page);
   await save(page, 'Kept');
   await saved(page);
   await page.reload();
   await openTimeline(page);
+  await tab(page, 'Explore');
   await expect(panel(page).getByRole('list', { name: 'Timeline, oldest first' })).toContainText('Kept');
 });
 
 test('delete one snapshot, with a confirmation that says copies elsewhere remain', async ({ page }) => {
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();
   await openTimeline(page);
   await save(page, 'Doomed');
+  await tab(page, 'Explore');
   await panel(page).getByRole('button', { name: 'Delete Doomed' }).click();
   const dialog = page.getByRole('alertdialog');
   await expect(dialog).toContainText('Backups and files you already made keep their own copies');
@@ -62,20 +72,26 @@ test('delete one snapshot, with a confirmation that says copies elsewhere remain
 });
 
 test('make a new profile from a snapshot, and the first one is untouched (I-12)', async ({ page }) => {
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();            // Unsure
   await openTimeline(page);
   await save(page, 'Then');
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();            // No
+  await tab(page, 'Explore');
   await panel(page).getByRole('button', { name: 'Make a new profile from Then' }).click();
   await page.getByRole('alertdialog').getByRole('button', { name: 'Make new profile' }).click();
   await expect(page.getByText('Profile: My profile (as at Then)')).toBeVisible();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unsure');
 });
 
 test('axe finds nothing serious in any theme, and it fits 320 px', async ({ page }) => {
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();
   await openTimeline(page);
   await save(page, 'One');
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();
   for (const label of ['Light', 'Dark', 'High contrast']) {
     await page.getByRole('combobox', { name: 'Appearance' }).selectOption({ label });

@@ -1,10 +1,11 @@
 // M7-07: the radial diagram and the overlap of two audiences, through the production build (D-067).
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, HUG, stateButton } from './fixtures.js';
+import { test, expect, HUG, stateButton, tab } from './fixtures.js';
 
 const panel = (page) => page.locator('section.panel').filter({ has: page.getByRole('heading', { name: 'Radial diagram and overlaps' }) });
 
 async function addAudience(page, name, kind) {
+  await tab(page, 'Share');
   await page.getByRole('button', { name: /^Open audiences/ }).click();
   await page.getByLabel('Name of the audience').fill(name);
   await page.getByLabel('Kind of audience').selectOption({ label: kind });
@@ -14,6 +15,7 @@ async function addAudience(page, name, kind) {
 
 test('the radial diagram is a list first, and the drawing is hidden from assistive technology (M7-07)', async ({ page }) => {
   await stateButton(page, HUG).click();   // Unsure
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open radial diagram and overlaps' }).click();
   const list = panel(page).getByRole('list', { name: 'Groups, in the order of the diagram' });
   await expect(list).toContainText('Unsure 1');
@@ -27,6 +29,7 @@ test('two audiences: answered for both, or for one only, in words (M7-07)', asyn
   await stateButton(page, HUG).click();
   await addAudience(page, 'Friends', 'Friends');
   await addAudience(page, 'Family', 'Family');
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open radial diagram and overlaps' }).click();
   await panel(page).getByLabel('First audience').selectOption({ label: 'Friends' });
   await panel(page).getByLabel('Second audience').selectOption({ label: 'Friends' });
@@ -44,6 +47,7 @@ test('axe finds nothing serious in any theme, and it reflows at 320 px', async (
   await stateButton(page, HUG).click();
   await addAudience(page, 'Friends', 'Friends');
   await addAudience(page, 'A very long audience name that has to wrap on a small screen', 'Family');
+  await tab(page, 'Explore');
   await page.getByRole('button', { name: 'Open radial diagram and overlaps' }).click();
   await panel(page).getByLabel('First audience').selectOption({ label: 'Friends' });
   await panel(page).getByLabel('Second audience').selectOption({ index: 2 });

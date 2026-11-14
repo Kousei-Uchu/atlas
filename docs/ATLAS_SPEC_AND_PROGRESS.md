@@ -127,6 +127,9 @@ Every invariant has an enforcing test. A change that breaks one is a bug, not a 
 | D-071 | A full backup can be locked with a password: PBKDF2-SHA256 (600,000 rounds) and AES-256-GCM through Web Crypto, on the device, with an authenticated header, a strictly validated untrusted header, one answer for wrong password and tampering, and plain copy about the limits. Views, exports and share links stay unencrypted. See `docs/decisions/0031-locked-backup.md`. |
 | D-072 | Number, date and choice items are new item types, stored as one written form in `text` (and `choices` for a choice) so views and every export carry them as plain words. Schema version 3. State-only features do not read them; pronoun sets stay grouped; reference items are deferred. See `docs/decisions/0032-further-item-types.md`. |
 | D-073 | Parent-audience inheritance: with no direct override, an audience inherits the nearest parent audience's enabled override, but only when it is no more open than your own answer. Inheritance narrows, never widens; a direct override always wins and may be more open. Disagreeing parent overrides inherit as Unanswered and say so. Conditional rules (time, context) are not built: they need inputs the app deliberately does not hold, see `docs/decisions/0033-audience-inheritance.md`. |
+| D-074 | Community templates are template files the person opens (no catalogue, upload or fetch). They pass the strict template schema, text rules (no web addresses, contact details, markup or hidden characters), a full preview and a read-it tick. They are added hidden, never less private than personal, with no origin so no bundled module or update can be reached. Wording is not judged for meaning (I-10). |
+| D-075 | Encrypted sync is not built. Threat model recorded; recommendation: keep locked backups plus the person's own file sync (option A), consider a separate opt-in bring-your-own-storage build later (option B), never a hosted service (option C). Any sync breaks I-06, so it needs an explicit decision. |
+| D-076 | The app is split into five sections shown as tabs (Chart, Modules, Explore, Share, Settings) with the consent notice on Chart, instead of one long page; chart row actions are quieter. Behaviour, data and wording unchanged. See `docs/decisions/0036-section-tabs-and-calmer-chart.md`. |
 
 ### 3.2 Open
 
@@ -796,8 +799,8 @@ Further item types (multi-select, number, date, reference, structured pronoun se
 - [x] M8-04 Password-protected export (D-020, D-071; threat note in `docs/decisions/0031-locked-backup.md`)
 - [x] M8-05 Further item types: number, date and multi-choice built (decision D-072); structured pronoun sets kept as grouped items (O-006 closed); reference items deferred, see `docs/decisions/0032-further-item-types.md`
 - [x] M8-06 Audience inheritance built (decision D-073); conditional rules deliberately deferred, see `docs/decisions/0033-audience-inheritance.md`
-- [ ] M8-07 Community templates with an abuse and privacy review
-- [ ] M8-08 Encrypted sync, only after a separate threat model
+- [x] M8-07 Community template files built with an abuse and privacy review (decision D-074); no hosted catalogue, see `docs/decisions/0034-community-templates.md`
+- [x] M8-08 Threat model and recommendation written (decision D-075); no sync code, build waits for the owner's answer to O-012, see `docs/decisions/0035-sync-threat-model.md`
 
 ---
 
@@ -836,6 +839,7 @@ Further item types (multi-select, number, date, reference, structured pronoun se
 | O-009 | Final precedence rules for overlapping audience and contextual rules | M8 | Direct, then nearest parent (narrowing only), then own answer (D-073). Contextual rules still open |
 | O-010 | Whether the adult-intended note should require a deliberate acknowledgement | M3 | Informational note |
 | O-011 | Body contact map: keep it restricted, hidden and adult-intended as the spec table says, or make it visible and personal since it covers non-private regions and platonic groups? | M7 | Spec table (restricted, hidden, adult-intended) |
+| O-012 | Is any in-app sync wanted, and if so which option (B bring-your-own-storage), build type and endpoint kind? | M8 | Not built; option A (locked backups) stands |
 
 ---
 
@@ -906,3 +910,7 @@ Further item types (multi-select, number, date, reference, structured pronoun se
 | 2026-11-12 | M8-04 done: locked backup. `storage/locked-backup.js`, lock and unlock in the Backup panel, threat note, notice and About wording updated, security and limitations docs updated, unit and e2e tests. |
 | 2026-11-12 | M8-05 done: number, date and choice items. `domain/item-values.js`, commands, validation, schema version 3 with a version-only migration, editor controls and an add form, unit and e2e tests. |
 | 2026-11-13 | M8-06 done: parent-audience inheritance in `domain/audience-resolution.js` (`inherited` source, `heldBack`, `ancestorsOf`), plain-words explanations, views note, unit and e2e tests, decision D-073. Conditional rules deferred. |
+| 2026-11-13 | M8-07 done: community template files. `domain/community-template.js` (review, text rules, add as hidden origin-less categories), Modules panel section, notice, threat table in decision D-074, unit and e2e tests. |
+| 2026-11-13 | M8-08 done as a threat model only: `docs/decisions/0035-sync-threat-model.md` (assets, adversaries, controls, three options, recommendation). No code. Roadmap M8 is complete apart from the owner decision O-012 and the conditional rules left open under O-009. |
+| 2026-11-14 | Pre-beta hardening pass: `docs/reviews/M8-hardening.md`. Added `tests/export/inheritance-leak.test.js` and `tests/domain/community-template-fuzz.test.js`; audit clean; gate document updated. No defects found. |
+| 2026-11-14 | UX pass: section tabs and calmer chart (D-076). Found and fixed two touch/phone defects of my own (Undo under 44 px, hidden profile name). All tests updated to choose a section. |

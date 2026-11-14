@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 const labels = (page) => page.locator('.item-row .item-label').allTextContents();
 
@@ -32,6 +32,7 @@ test('an item moves down with the keyboard, keeps focus, and the order survives 
   await expect(down).toBeFocused();
   await saved(page);
   await page.reload();
+  await tab(page, 'Chart');
   await expect(page.locator('.item-row .item-label')).toHaveCount(7);
   expect((await labels(page)).slice(0, 2)).toEqual(['A high five', HUG]);
 });

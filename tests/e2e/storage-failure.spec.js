@@ -1,6 +1,6 @@
 // Storage failure review (M6-01; spec 9, R-05, I-12): what the person sees when the browser's storage fails.
 import { test as base, expect } from '@playwright/test';
-import { test, stateButton, saved, HUG } from './fixtures.js';
+import { test, stateButton, saved, HUG, tab } from './fixtures.js';
 import { checkEnvelope } from '../../src/share/envelope.js';
 import { encodePayload } from '../../src/share/codec.js';
 import { CONSENT_NOTICE } from '../../src/content/notices.js';
@@ -46,6 +46,7 @@ test('a failed save keeps the person\'s work on screen, says so, and recovers wh
   await saved(page);
   await expect(page.getByRole('alert')).toHaveCount(0);
   await page.reload();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText(after);
 });
 

@@ -32,6 +32,10 @@ export const LOCKED_NOTICE =
 export const IMPORT_NOTICE =
   'Importing always creates a new profile. Your existing profiles are not changed.';
 
+/** D-074: shown with every community template file before it is added. */
+export const COMMUNITY_TEMPLATE_NOTICE =
+  'A template file was written by someone else. It only adds questions: it never adds answers, and nothing is sent anywhere. Read every item first. Its wording is not checked for meaning, only for web addresses, contact details and hidden characters. Everything it adds starts hidden, and you can change or delete any of it.';
+
 /** Save status text (spec 9). "Saved" is only ever shown after the write has committed (I-13). */
 export const SAVE_STATUS_TEXT = Object.freeze({
   saving: 'Saving…',

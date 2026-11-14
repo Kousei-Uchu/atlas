@@ -1,4 +1,4 @@
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 test('starts Unanswered, edits, survives a reload, and undoes', async ({ page }) => {
   await expect(stateButton(page, HUG)).toHaveText('Unanswered');
@@ -14,6 +14,7 @@ test('starts Unanswered, edits, survives a reload, and undoes', async ({ page })
   await saved(page);
 
   await page.reload();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unsure');
   // Undo history is in memory only (D-025): nothing to undo after a reload.
   await expect(page.getByRole('button', { name: 'Undo' })).toBeDisabled();
@@ -45,14 +46,18 @@ test('the picker reaches every state without a right click', async ({ page }) =>
 test('deleting everything asks first and says what it removes', async ({ page }) => {
   await stateButton(page, HUG).click();
   await saved(page);
+  await tab(page, 'Settings');
   await page.getByRole('button', { name: 'Delete all local data' }).click();
   const dialog = page.getByRole('alertdialog', { name: 'Delete all local data?' });
   await expect(dialog).toContainText('permanently removes every profile');
   await page.keyboard.press('Escape');
   await expect(dialog).toBeHidden();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unsure');
 
+  await tab(page, 'Settings');
   await page.getByRole('button', { name: 'Delete all local data' }).click();
   await dialog.getByRole('button', { name: 'Delete everything' }).click();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Unanswered');
 });

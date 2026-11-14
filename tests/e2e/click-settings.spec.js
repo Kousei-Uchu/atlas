@@ -1,34 +1,43 @@
 import AxeBuilder from '@axe-core/playwright';
-import { test, expect, HUG, stateButton, saved } from './fixtures.js';
+import { test, expect, HUG, stateButton, saved, tab } from './fixtures.js';
 
 const openSettings = async (page) => {
+  await tab(page, 'Settings');
   await page.getByRole('button', { name: 'Edit click behaviour' }).click();
   await expect(page.getByRole('radio', { name: 'Toward No' })).toBeChecked();
 };
 
 test('choosing the other direction reverses a tap, and survives a reload (M2-09)', async ({ page }) => {
   await openSettings(page);
+  await tab(page, 'Settings');
   await page.getByRole('radio', { name: 'Toward Yes' }).check();
+  await tab(page, 'Chart');
   await stateButton(page, HUG).click();
   await expect(stateButton(page, HUG)).toHaveText('Conditional');
   await saved(page);
 
   await page.reload();
+  await tab(page, 'Settings');
   await page.getByRole('button', { name: 'Edit click behaviour' }).click();
   await expect(page.getByRole('radio', { name: 'Toward Yes' })).toBeChecked();
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Conditional');
 });
 
 test('going around at the end wraps from No to Yes (M2-09)', async ({ page }) => {
   await openSettings(page);
+  await tab(page, 'Settings');
   await page.getByRole('radio', { name: 'Go around to the other end' }).check();
+  await tab(page, 'Chart');
   for (let i = 0; i < 3; i += 1) await stateButton(page, HUG).click(); // Unsure, No, then past the end
+  await tab(page, 'Chart');
   await expect(stateButton(page, HUG)).toHaveText('Yes');
 });
 
 test('arrow keys move between the choices in a group (M2-09)', async ({ page, isMobile }) => {
   test.skip(isMobile, 'keyboard flow is a desktop concern');
   await openSettings(page);
+  await tab(page, 'Settings');
   await page.getByRole('radio', { name: 'Toward No' }).focus();
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('radio', { name: 'Toward Yes' })).toBeChecked();
@@ -36,6 +45,7 @@ test('arrow keys move between the choices in a group (M2-09)', async ({ page, is
 
 test('the settings can be undone (M2-09)', async ({ page }) => {
   await openSettings(page);
+  await tab(page, 'Settings');
   await page.getByRole('radio', { name: 'Toward Yes' }).check();
   await page.getByRole('button', { name: 'Undo' }).click();
   await expect(page.getByRole('radio', { name: 'Toward No' })).toBeChecked();

@@ -43,3 +43,7 @@ Copy a small file such as `communication.js`. The shape is checked by `src/domai
 
 `npm run templates:wording` writes `docs/TEMPLATE_WORDING.md`, a plain reading copy of every
 template. Review that file rather than the source.
+
+## Template files from other people
+
+The same format works as a `.json` file opened from Modules, "Add a template from a file". Such a file is checked more strictly than a bundled template (no web addresses, email addresses, phone numbers, @handles, markup or hidden characters in any text) and is added as ordinary hidden categories, so it never updates or resets. See `docs/decisions/0034-community-templates.md`.
